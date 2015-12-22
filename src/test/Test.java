@@ -1,8 +1,8 @@
 package test;
 
-import com.bookmanager.connect.ODBCConnection;
 import com.bookmanager.frame.LoginFrame;
-import com.bookmanager.model.User;
+import com.bookmanager.model.Book;
+import com.bookmanager.sql.common.Sentence;
 
 public class Test {
 
@@ -11,7 +11,7 @@ public class Test {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		LoginFrame lf = new LoginFrame();
+		LoginFrame lg = new LoginFrame();
 	}
 
 }
