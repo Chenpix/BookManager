@@ -125,6 +125,10 @@ public class Book {
 		this.quanLoss = quanLoss;
 	}
 
+		public void setPublishDate(String publishDate) {
+		this.publishDate = publishDate;
+	}
+
 	public boolean isEmpty() {
 		// TODO Auto-generated method stub
 		if (!this.bookId.equals("") || !this.bookName.equals("")

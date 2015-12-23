@@ -15,6 +15,7 @@ public class Reader {
 	private String level;
 	private String signUpTime;
 	private String password;
+	private int borrowNumber;
 	
 	public Reader(String id, String password) {
 		this.id = id;
@@ -114,5 +115,12 @@ public class Reader {
 		this.signUpTime = date.toString();
 	}
 	
-	
+	public int getBorrowNumber() {
+		return borrowNumber;
+	}
+
+	public void setBorrowNumber(int borrowNumber) {
+		this.borrowNumber = borrowNumber;
+	}
+
 }

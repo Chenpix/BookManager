@@ -32,7 +32,6 @@ public class UserSearchPanel extends JPanel implements ActionListener {
 	private JTextField publishingField;
 	private JTextField bookNameField;
 	private JTextField authorField;
-	private CommonService commonService;
 	private JPanel inforPanel;
 	private JButton searchButton;
 
@@ -123,7 +122,6 @@ public class UserSearchPanel extends JPanel implements ActionListener {
 		gbc_searchButton.gridx = 1;
 		gbc_searchButton.gridy = 2;
 		add(searchButton, gbc_searchButton);
-		this.commonService = CommonService.getCommonService();
 
 		JButton resetButton = new JButton("\u91CD\u7F6E");
 		GridBagConstraints gbc_resetButton = new GridBagConstraints();

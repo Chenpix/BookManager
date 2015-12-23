@@ -13,12 +13,14 @@ import com.bookmanager.model.Reader;
 public class CommonService {
 	
 	private Statement myStatement;
+	private Sentence mySentence;
 	private static final CommonService myCommonService = new CommonService();
 	private List<Book> bookList;
 	
 	private CommonService() {
 		// TODO Auto-generated constructor stub
 		this.myStatement = ODBCConnection.getStatement();
+		this.mySentence = Sentence.getSentenceInstance();
 		this.bookList = new ArrayList<Book>();
 	}
 
@@ -26,7 +28,7 @@ public class CommonService {
 	 * 获取CommonService的单例
 	 * @return CommonService的单例
 	 */
-	public static CommonService getCommonService() {
+	public static CommonService getCommonServiceInstance() {
 		return myCommonService;
 	}
 	
@@ -37,7 +39,7 @@ public class CommonService {
 	public boolean isLegitimateUser(Reader reader) {
 
 		try {
-			ResultSet resultSet = myStatement.executeQuery(Sentence.getReaderSQL(reader));
+			ResultSet resultSet = myStatement.executeQuery(mySentence.getReaderSQL(reader));
 			if ( !resultSet.next() ) {
 				return false;
 			}
@@ -65,6 +67,7 @@ public class CommonService {
 			reader.setCardId(resultSet.getString("card_id"));
 			reader.setLevel(resultSet.getString("level"));
 			reader.setSignUpTime(resultSet.getDate("day"));
+			reader.setBorrowNumber(resultSet.getInt("borrow_number"));
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -108,7 +111,7 @@ public class CommonService {
 			return null;
 		}
 		
-		String sql = Sentence.getBookListSQL(book);
+		String sql = mySentence.getBookListSQL(book);
 		try {
 			ResultSet rs = this.myStatement.executeQuery(sql);
 			if ( !this.fillBookList(rs, this.bookList) ) {
@@ -123,21 +126,5 @@ public class CommonService {
 	}
 	
 	
-	public boolean updateBookQuanForCheckOut(Book book) {
-		book.setQuanIn(book.getQuanIn()-1);
-		book.setQuanOut(book.getQuanOut()+1);
-		String sql = Sentence.getBookCheckOutSQL(book);
-		try {
-			this.myStatement.execute(sql);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
 	
-	public boolean insertCheckOutRecord(Book book, Reader reader) {
-		return true;
-	}
 }

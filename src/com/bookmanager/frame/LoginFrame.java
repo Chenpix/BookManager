@@ -37,7 +37,7 @@ public class LoginFrame extends JFrame implements ActionListener, KeyListener {
 		this.initControl();
 		this.initFrame();
 		
-		this.cs = CommonService.getCommonService();
+		this.cs = CommonService.getCommonServiceInstance();
 	}
 
 	public String getUserName() {
