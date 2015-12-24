@@ -6,6 +6,7 @@ import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -14,6 +15,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import com.bookmanager.model.Book;
+import com.bookmanager.model.CheckOutRecord;
 import com.bookmanager.model.Reader;
 import com.bookmanager.sql.common.CommonService;
 import com.bookmanager.sql.common.Sentence;
@@ -21,28 +23,22 @@ import com.bookmanager.sql.user.UserService;
 
 public class MainFrame extends JFrame implements ActionListener {
 
-	private static final String[] checkOutHead = { "书号", "书名", "作者", "出版社",
-			"馆藏数量", "  " };
-	private static final int SEARCHPANEL = 1000;
-	private static final int PINFOPANEL = 1001;
-	private static final int RETURNPANEL = 1002;
-	private static final int LOSSPANEL = 1003;
-	private static final int RECORDPANEL = 1004;
-	private static final int RESULTPANEL = 1005;
-
 	private Reader reader;
-	private UserSearchPanel userSearch;
-	private UserButtonListPanel userButtonList;
+	private List<Book> bookList;
+	private int contentPanel;// 指定当前的右面板
+
 	private CommonService commonService;
 	private UserService userService;
-	private List<Book> bookList;
+
+	private UserSearchPanel userSearch;
+	private UserButtonListPanel userButtonList;
 	private CommonBookListPanel userSearchResult;
+	private UserCheckOutRecordPanel userCheckOutRecord;
 	private JPanel rightPanel;
-	private int contentPanel;// 指定当前的右面板
 
 	public MainFrame(Reader reader) {
 		this.reader = reader;
-		this.contentPanel = MainFrame.SEARCHPANEL;
+		this.contentPanel = UserService.SEARCHPANEL;
 		this.initAll();
 	}
 
@@ -70,6 +66,8 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.userButtonList.getLendButton().addActionListener(this);
 		this.userSearch.getSearchButton().setActionCommand("SEARCH");
 		this.userSearch.getSearchButton().addActionListener(this);
+		this.userButtonList.getRecordButton().setActionCommand("RECORD");
+		this.userButtonList.getRecordButton().addActionListener(this);
 	}
 
 	private void initUserFrame() {
@@ -105,7 +103,15 @@ public class MainFrame extends JFrame implements ActionListener {
 			}
 			break;
 		case "LEND":
-			this.loadRightPanel(MainFrame.SEARCHPANEL);
+			this.loadRightPanel(UserService.SEARCHPANEL);
+			break;
+
+		case "RECORD":
+			if (!genCheckOutRecordPanel()) {
+				// 借阅记录列表为空
+				JOptionPane.showMessageDialog(this, "暂时没有符合条件的借阅记录！", "查询失败",
+						JOptionPane.YES_OPTION);
+			}
 			break;
 		}
 	}
@@ -119,13 +125,18 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.rightPanel.removeAll();
 		switch (choice) {
 
-		case MainFrame.SEARCHPANEL:
+		case UserService.SEARCHPANEL:
 			this.rightPanel.add(userSearch);
 			this.bookList.clear();
 			break;
 
-		case MainFrame.RESULTPANEL:
+		case UserService.RESULTPANEL:
 			this.rightPanel.add(userSearchResult);
+			break;
+
+		case UserService.RECORDPANEL:
+			this.rightPanel.add(userCheckOutRecord);
+
 		default:
 			break;
 		}
@@ -133,25 +144,51 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.rightPanel.updateUI();
 	}
 
+	/**
+	 * 替换查找界面为查找结果界面
+	 * 
+	 * @return 替换成功
+	 */
 	private boolean genSearchResultPanel() {
-		// TODO 替换查找界面为查找结果界面
 		if ((bookList = commonService.getBookList(this.userSearch
 				.getBookInfor())) == null) {
 			return false;
 		}
 		this.userSearchResult = new CommonBookListPanel(
-				this.userService.formatUserBookList(this.bookList),
-				MainFrame.checkOutHead);
-		loadRightPanel(RESULTPANEL);
+				this.userService.formatUserBookList(this.bookList));
+		loadRightPanel(UserService.RESULTPANEL);
 		return true;
 	}
 
+	/**
+	 * 更新查找结果界面
+	 */
 	private void updateSearchResultPanel() {
-		// TODO 更新查找结果界面
+		// TODO
 		this.userSearchResult = new CommonBookListPanel(
-				this.userService.formatUserBookList(this.bookList),
-				MainFrame.checkOutHead);
-		loadRightPanel(RESULTPANEL);
+				this.userService.formatUserBookList(this.bookList));
+		loadRightPanel(UserService.RESULTPANEL);
+	}
+
+	/**
+	 * 生成借阅记录面板
+	 * 
+	 * @return
+	 */
+	private boolean genCheckOutRecordPanel() {
+		Object[] possibleValues = { "半年内", "一年内" };
+		Object selectedValue = JOptionPane.showInputDialog(null,
+				"请选择您要查询的记录时间", "借阅记录", JOptionPane.INFORMATION_MESSAGE, null,
+				possibleValues, possibleValues[0]);
+		List<CheckOutRecord> recordList = this.userService.getBorrowRecordList(
+				reader, (String) selectedValue);
+		if (recordList != null) {
+			this.userCheckOutRecord = new UserCheckOutRecordPanel(
+					this.userService.formatUserCheckOutRecord(recordList));
+			loadRightPanel(UserService.RECORDPANEL);
+			return true;
+		}
+		return false;
 	}
 
 	/**

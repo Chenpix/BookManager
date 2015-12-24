@@ -50,8 +50,8 @@ public class Reader {
 		return birthday;
 	}
 
-	public void setBirthday(String birthday) {
-		this.birthday = birthday;
+	public void setBirthday(Date date) {
+		this.birthday = date.toString();
 	}
 
 	public int getPhone() {

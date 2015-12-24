@@ -57,10 +57,10 @@ public class Sentence {
 				+ book.getBookId() + "'";
 	}
 
-	public String getCheckOutRecordSQL(Book book, Reader reader) {
+	public String getInsertCheckOutRecordSQL(Book book, Reader reader) {
 		return "INSERT INTO [bookmanager].[dbo].[borrow] "
 				+ "(reader_id, book_id, date_borrow, date_return, loss) "
-				+ "VALUES ('"+ reader.getId()+ "','"+ book.getBookId()
+				+ "VALUES ('" + reader.getId() + "','" + book.getBookId()
 				+ "',getdate(),NULL,0);";
 	}
 
@@ -71,6 +71,30 @@ public class Sentence {
 
 	public String getUpdateBorrowNumberSQL(Reader reader) {
 		return "UPDATE reader SET borrow_number=" + reader.getBorrowNumber()
-				+ " WHERE reader_id='" + reader.getId()+"'";
+				+ " WHERE reader_id='" + reader.getId() + "'";
+	}
+
+	/**
+	 * 借阅记录查询语句
+	 * @param reader 用户
+	 * @param limit 时间限制
+	 * @return
+	 */
+	public String getCheckOutRecordSQL(Reader reader, String limit) {
+		String i = "0";
+		if( limit.equals("半年内")) {
+			i = "6";
+		}
+		else if( limit.equals("一年内") ) {
+			i = "12";
+		}
+		return "SELECT book_name,author,reader_name,date_borrow,date_return,loss "
+				+ "FROM book,borrow,reader "
+				+ "WHERE reader.reader_id ='"
+				+ reader.getId() + "' AND "
+				+ "reader.reader_id = borrow.reader_id AND "
+				+ "book.book_id = borrow.book_id AND "
+				+ "borrow.date_borrow between dateadd(MONTH,-"
+				+ i + ",GETDATE()) and GETDATE()";
 	}
 }

@@ -5,29 +5,21 @@ import javax.swing.JButton;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import javax.swing.border.BevelBorder;
+import java.awt.Color;
 
 public class UserButtonListPanel extends JPanel {
 	
 	private JButton lendButton;
-	private JButton returnButton;
 	private JButton infoButton;
-	private JButton lossButton;
 	private JButton recordButton;
 	
 	public JButton getLendButton() {
 		return lendButton;
 	}
 
-	public JButton getReturnButton() {
-		return returnButton;
-	}
-
 	public JButton getInfoButton() {
 		return infoButton;
-	}
-
-	public JButton getLossButton() {
-		return lossButton;
 	}
 
 	public JButton getRecordButton() {
@@ -35,52 +27,37 @@ public class UserButtonListPanel extends JPanel {
 	}
 	
 	public UserButtonListPanel() {
+		setBorder(new BevelBorder(BevelBorder.RAISED, null, new Color(64, 64, 64), new Color(0, 0, 0), null));
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{18, 114, 0, 0, 0};
-		gridBagLayout.rowHeights = new int[]{31, 56, 30, 56, 30, 56, 30, 56, 30, 56, 0, 0};
-		gridBagLayout.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.columnWidths = new int[]{0, 109, 0, 0};
+		gridBagLayout.rowHeights = new int[]{0, 51, 32, 51, 35, 51, 0};
+		gridBagLayout.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(gridBagLayout);
 		
 		lendButton = new JButton("我要借书");
-		GridBagConstraints gbc_btnNewButton = new GridBagConstraints();
-		gbc_btnNewButton.fill = GridBagConstraints.BOTH;
-		gbc_btnNewButton.insets = new Insets(0, 0, 5, 5);
-		gbc_btnNewButton.gridx = 1;
-		gbc_btnNewButton.gridy = 1;
-		add(lendButton, gbc_btnNewButton);
-		
-		returnButton = new JButton("我要还书");
-		GridBagConstraints gbc_button = new GridBagConstraints();
-		gbc_button.fill = GridBagConstraints.BOTH;
-		gbc_button.insets = new Insets(0, 0, 5, 5);
-		gbc_button.gridx = 1;
-		gbc_button.gridy = 3;
-		add(returnButton, gbc_button);
-		
-		infoButton = new JButton("个人信息");
-		GridBagConstraints gbc_button_3 = new GridBagConstraints();
-		gbc_button_3.fill = GridBagConstraints.BOTH;
-		gbc_button_3.insets = new Insets(0, 0, 5, 5);
-		gbc_button_3.gridx = 1;
-		gbc_button_3.gridy = 5;
-		add(infoButton, gbc_button_3);
-		
-		lossButton = new JButton("我要挂失");
-		GridBagConstraints gbc_button_1 = new GridBagConstraints();
-		gbc_button_1.fill = GridBagConstraints.BOTH;
-		gbc_button_1.insets = new Insets(0, 0, 5, 5);
-		gbc_button_1.gridx = 1;
-		gbc_button_1.gridy = 7;
-		add(lossButton, gbc_button_1);
+		GridBagConstraints gbc_lendButton = new GridBagConstraints();
+		gbc_lendButton.fill = GridBagConstraints.BOTH;
+		gbc_lendButton.insets = new Insets(0, 0, 5, 5);
+		gbc_lendButton.gridx = 1;
+		gbc_lendButton.gridy = 1;
+		add(lendButton, gbc_lendButton);
 		
 		recordButton = new JButton("历史借阅");
-		GridBagConstraints gbc_button_2 = new GridBagConstraints();
-		gbc_button_2.insets = new Insets(0, 0, 5, 5);
-		gbc_button_2.fill = GridBagConstraints.BOTH;
-		gbc_button_2.gridx = 1;
-		gbc_button_2.gridy = 9;
-		add(recordButton, gbc_button_2);
+		GridBagConstraints gbc_recordButton = new GridBagConstraints();
+		gbc_recordButton.fill = GridBagConstraints.BOTH;
+		gbc_recordButton.insets = new Insets(0, 0, 5, 5);
+		gbc_recordButton.gridx = 1;
+		gbc_recordButton.gridy = 3;
+		add(recordButton, gbc_recordButton);
+		
+		infoButton = new JButton("个人信息");
+		GridBagConstraints gbc_infoButton = new GridBagConstraints();
+		gbc_infoButton.insets = new Insets(0, 0, 0, 5);
+		gbc_infoButton.fill = GridBagConstraints.BOTH;
+		gbc_infoButton.gridx = 1;
+		gbc_infoButton.gridy = 5;
+		add(infoButton, gbc_infoButton);
 	}
 	
 }

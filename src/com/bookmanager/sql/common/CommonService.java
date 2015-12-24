@@ -15,13 +15,11 @@ public class CommonService {
 	private Statement myStatement;
 	private Sentence mySentence;
 	private static final CommonService myCommonService = new CommonService();
-	private List<Book> bookList;
 	
 	private CommonService() {
 		// TODO Auto-generated constructor stub
 		this.myStatement = ODBCConnection.getStatement();
 		this.mySentence = Sentence.getSentenceInstance();
-		this.bookList = new ArrayList<Book>();
 	}
 
 	/**
@@ -60,7 +58,7 @@ public class CommonService {
 			resultSet.first();
 			reader.setName(resultSet.getString("reader_name"));
 			reader.setSex(resultSet.getString("sex"));
-			reader.setBirthday(resultSet.getString("birthday"));
+			reader.setBirthday(resultSet.getDate("birthday"));
 			reader.setPhone(resultSet.getInt("phone"));
 			reader.setMobile(resultSet.getString("mobile"));
 			reader.setCardName(resultSet.getString("card_name"));
@@ -104,7 +102,11 @@ public class CommonService {
 		return true;
 	}
 	
-	
+	/**
+	 * 根据给定的查询条件查询书目
+	 * @param book 使用给定条件所构造的book实例
+	 * @return 符合条件的书本列表
+	 */
 	public List<Book> getBookList(Book book) {
 		//判断书的信息是否为空
 		if( book.isEmpty() ) {
@@ -112,9 +114,10 @@ public class CommonService {
 		}
 		
 		String sql = mySentence.getBookListSQL(book);
+		List<Book> bookList = new ArrayList<Book>();
 		try {
 			ResultSet rs = this.myStatement.executeQuery(sql);
-			if ( !this.fillBookList(rs, this.bookList) ) {
+			if ( !this.fillBookList(rs, bookList) ) {
 				return null;
 			}
 		} catch (SQLException e) {
@@ -122,7 +125,7 @@ public class CommonService {
 			e.printStackTrace();
 		}
 		
-		return this.bookList;
+		return bookList;
 	}
 	
 	

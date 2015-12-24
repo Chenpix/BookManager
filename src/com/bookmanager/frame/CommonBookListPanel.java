@@ -22,25 +22,27 @@ import javax.swing.table.TableColumnModel;
 public class CommonBookListPanel extends JPanel implements ActionListener{
 
 	private static final long serialVersionUID = 1L;
-	private static final int[] width = { 50, 100, 50, 150, 80, 50 };
-	private static final int height = 30;
+	private final int[] width = { 50, 100, 50, 150, 80, 50 };
+	private final int height = 30;
+	private final String[] checkOutHead = { "书号", "书名", "作者", "出版社",
+		"馆藏数量", "  " };
+	
 	private JTable table = null;
 	private DefaultTableModel model = null;
-	private JScrollPane scrollPane = null;
 
-	public CommonBookListPanel(Object[][] data, String[] head) {
+	public CommonBookListPanel(Object[][] data) {
 
-		model = new DefaultTableModel(data, head);
+		model = new DefaultTableModel(data, checkOutHead);
 		table = new JTable(model);
 		MyRender myRender = new MyRender(getRemainNumber(data));
-		table.getColumnModel().getColumn(head.length - 1)
+		table.getColumnModel().getColumn(checkOutHead.length - 1)
 				.setCellEditor(myRender);// 设置编辑器
-		table.getColumnModel().getColumn(head.length - 1)
+		table.getColumnModel().getColumn(checkOutHead.length - 1)
 				.setCellRenderer(myRender);
 		// table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-		this.setTableColumnWidthAndHeight(table, CommonBookListPanel.width,
-				CommonBookListPanel.height);
-		scrollPane = new JScrollPane(table,
+		this.setTableColumnWidthAndHeight(this.table, this.width,
+				this.height);
+		JScrollPane scrollPane = new JScrollPane(table,
 				JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 

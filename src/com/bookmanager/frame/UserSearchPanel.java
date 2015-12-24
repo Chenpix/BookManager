@@ -111,8 +111,7 @@ public class UserSearchPanel extends JPanel implements ActionListener {
 		panel_1.setLayout(new GridLayout(1, 1, 0, 0));
 
 		JLabel ImageLabel = new JLabel("");
-		ImageLabel.setIcon(new ImageIcon(
-				"C:\\Users\\Public\\Pictures\\Sample Pictures\\view.jpg"));
+		ImageLabel.setIcon(new ImageIcon("image/view.jpg"));
 		panel_1.add(ImageLabel);
 
 		searchButton = new JButton("\u67E5\u627E");
