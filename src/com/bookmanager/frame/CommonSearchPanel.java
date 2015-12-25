@@ -26,7 +26,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.UIManager;
 import java.awt.Dimension;
 
-public class UserSearchPanel extends JPanel implements ActionListener {
+public class CommonSearchPanel extends JPanel implements ActionListener {
 
 	private JTextField bookIdField;
 	private JTextField publishingField;
@@ -35,7 +35,7 @@ public class UserSearchPanel extends JPanel implements ActionListener {
 	private JPanel inforPanel;
 	private JButton searchButton;
 
-	public UserSearchPanel() {
+	public CommonSearchPanel() {
 		setBackground(Color.LIGHT_GRAY);
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 47, 115, 124, 120, 35, 115, 0 };
@@ -100,6 +100,10 @@ public class UserSearchPanel extends JPanel implements ActionListener {
 		authorField.setColumns(10);
 		authorField.setBounds(129, 220, 214, 28);
 		inforPanel.add(authorField);
+		
+		JLabel lblNewLabel = new JLabel("(温馨提示:直接搜索可查看所有书籍)");
+		lblNewLabel.setBounds(26, 267, 254, 21);
+		inforPanel.add(lblNewLabel);
 
 		JPanel panel_1 = new JPanel();
 		GridBagConstraints gbc_panel_1 = new GridBagConstraints();

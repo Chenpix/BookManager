@@ -27,10 +27,10 @@ public class UserButtonListPanel extends JPanel {
 	}
 	
 	public UserButtonListPanel() {
-		setBorder(new BevelBorder(BevelBorder.RAISED, null, new Color(64, 64, 64), new Color(0, 0, 0), null));
+		setBorder(new BevelBorder(BevelBorder.RAISED, null, null, Color.DARK_GRAY, null));
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{0, 109, 0, 0};
-		gridBagLayout.rowHeights = new int[]{0, 51, 32, 51, 35, 51, 0};
+		gridBagLayout.columnWidths = new int[]{6, 109, 0, 0};
+		gridBagLayout.rowHeights = new int[]{25, 51, 32, 51, 35, 51, 0};
 		gridBagLayout.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(gridBagLayout);

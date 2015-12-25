@@ -1,86 +1,106 @@
 package com.bookmanager.frame;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import com.bookmanager.model.Book;
 import com.bookmanager.model.CheckOutRecord;
 import com.bookmanager.model.Reader;
+import com.bookmanager.sql.admin.AdminService;
 import com.bookmanager.sql.common.CommonService;
-import com.bookmanager.sql.common.Sentence;
 import com.bookmanager.sql.user.UserService;
 
 public class MainFrame extends JFrame implements ActionListener {
 
+	private int clickTimes;
+	private String BTBcommand;
 	private Reader reader;
 	private List<Book> bookList;
-	private int contentPanel;// 指定当前的右面板
 
 	private CommonService commonService;
 	private UserService userService;
+	private AdminService adminService;
 
-	private UserSearchPanel userSearch;
+	private CommonSearchPanel commonSearch;
 	private UserButtonListPanel userButtonList;
-	private CommonBookListPanel userSearchResult;
-	private UserCheckOutRecordPanel userCheckOutRecord;
+	private CommonTablePanel userSearchResult;
+	private CommonTablePanel userCheckOutRecord;
+	private AdminButtonListPanel adminButtonList;
 	private JPanel rightPanel;
 
 	public MainFrame(Reader reader) {
 		this.reader = reader;
-		this.contentPanel = UserService.SEARCHPANEL;
+		this.bookList = new ArrayList<Book>();
+		this.clickTimes = 0;
 		this.initAll();
 	}
 
 	private void initAll() {
 		this.initFrame();
-		this.initContent();
-		this.initService();
+		this.initContent(reader.getLevel());
 	}
 
-	private void initService() {
+	private void initUserService() {
 		this.commonService = CommonService.getCommonServiceInstance();
 		this.userService = UserService.getUserServiceInstance();
 	}
 
-	public void initContent() {
-		if (this.reader.getLevel().equals("ADMIN")) {
-
-		} else {
-			initUserFrame();
-		}
+	private void initAdminService() {
+		this.commonService = CommonService.getCommonServiceInstance();
+		this.adminService = AdminService.getAdminServiceInstance();
 	}
 
-	private void initButtonList() {
+	public void initContent(String level) {
+
+		this.commonSearch = new CommonSearchPanel();
+		this.rightPanel = new JPanel(new GridLayout(1, 1));
+		this.rightPanel.add(commonSearch);
+		this.add(this.rightPanel, BorderLayout.CENTER);
+
+		if (level.equals("ADMIN")) {
+			this.adminButtonList = new AdminButtonListPanel();
+			this.add(this.adminButtonList, BorderLayout.WEST);
+			initAdminButtonListener();
+			initAdminService();
+			BTBcommand = CommonTablePanel.CHECK;
+		} else {
+			this.userButtonList = new UserButtonListPanel();
+			this.add(this.userButtonList, BorderLayout.WEST);
+			initUserButtonListener();
+			initUserService();
+			BTBcommand = CommonTablePanel.INFO;
+		}
+		initCommonButtonListener();
+	}
+
+	private void initUserButtonListener() {
 		this.userButtonList.getLendButton().setActionCommand("LEND");
 		this.userButtonList.getLendButton().addActionListener(this);
-		this.userSearch.getSearchButton().setActionCommand("SEARCH");
-		this.userSearch.getSearchButton().addActionListener(this);
 		this.userButtonList.getRecordButton().setActionCommand("RECORD");
 		this.userButtonList.getRecordButton().addActionListener(this);
+		this.userButtonList.getInfoButton().setActionCommand("INFO");
+		this.userButtonList.getInfoButton().addActionListener(this);
 	}
 
-	private void initUserFrame() {
-		// TODO Auto-generated method stub
-		this.userButtonList = new UserButtonListPanel();
-		this.add(this.userButtonList, BorderLayout.WEST);
-		this.userSearch = new UserSearchPanel();
-		this.rightPanel = new JPanel(new GridLayout(1, 1));
-		this.rightPanel.add(userSearch);
-		this.add(this.rightPanel, BorderLayout.CENTER);
-		initButtonList();
+	private void initAdminButtonListener() {
+		this.adminButtonList.getSearchBookButton().setActionCommand("LEND");
+		this.adminButtonList.getSearchBookButton().addActionListener(this);
 	}
 
+	private void initCommonButtonListener() {
+		this.commonSearch.getSearchButton().setActionCommand("SEARCH");
+		this.commonSearch.getSearchButton().addActionListener(this);
+	}
+	
 	public void initFrame() {
 		this.setSize(800, 500);
 		this.setVisible(true);
@@ -99,11 +119,11 @@ public class MainFrame extends JFrame implements ActionListener {
 				// 书目列表为空
 				JOptionPane.showMessageDialog(this, "没有符合条件的书目，请重新输入搜索条件！",
 						"查询失败", JOptionPane.YES_OPTION);
-				this.userSearch.resetAllField();
+				this.commonSearch.resetAllField();
 			}
 			break;
 		case "LEND":
-			this.loadRightPanel(UserService.SEARCHPANEL);
+			this.loadRightPanel(CommonService.SEARCHPANEL);
 			break;
 
 		case "RECORD":
@@ -113,6 +133,10 @@ public class MainFrame extends JFrame implements ActionListener {
 						JOptionPane.YES_OPTION);
 			}
 			break;
+		}
+		if( clickTimes++ == 3 ) {
+			System.gc();
+			clickTimes = 0;
 		}
 	}
 
@@ -125,8 +149,8 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.rightPanel.removeAll();
 		switch (choice) {
 
-		case UserService.SEARCHPANEL:
-			this.rightPanel.add(userSearch);
+		case CommonService.SEARCHPANEL:
+			this.rightPanel.add(commonSearch);
 			this.bookList.clear();
 			break;
 
@@ -140,7 +164,6 @@ public class MainFrame extends JFrame implements ActionListener {
 		default:
 			break;
 		}
-		this.contentPanel = choice;
 		this.rightPanel.updateUI();
 	}
 
@@ -150,12 +173,16 @@ public class MainFrame extends JFrame implements ActionListener {
 	 * @return 替换成功
 	 */
 	private boolean genSearchResultPanel() {
-		if ((bookList = commonService.getBookList(this.userSearch
+		if ((bookList = commonService.getBookList(this.commonSearch
 				.getBookInfor())) == null) {
 			return false;
 		}
-		this.userSearchResult = new CommonBookListPanel(
-				this.userService.formatUserBookList(this.bookList));
+
+		this.userSearchResult = new CommonTablePanel(
+				UserService.formatUserBookList(bookList),
+				commonService.getBookTableHead(reader.getLevel()),
+				commonService.getBookTableWidth(), CommonService.HEIGHT, true,
+				BTBcommand);
 		loadRightPanel(UserService.RESULTPANEL);
 		return true;
 	}
@@ -165,8 +192,11 @@ public class MainFrame extends JFrame implements ActionListener {
 	 */
 	private void updateSearchResultPanel() {
 		// TODO
-		this.userSearchResult = new CommonBookListPanel(
-				this.userService.formatUserBookList(this.bookList));
+		this.userSearchResult = new CommonTablePanel(
+				UserService.formatUserBookList(bookList),
+				commonService.getBookTableHead(reader.getLevel()),
+				commonService.getBookTableWidth(), CommonService.HEIGHT, true,
+				BTBcommand);
 		loadRightPanel(UserService.RESULTPANEL);
 	}
 
@@ -183,8 +213,11 @@ public class MainFrame extends JFrame implements ActionListener {
 		List<CheckOutRecord> recordList = this.userService.getBorrowRecordList(
 				reader, (String) selectedValue);
 		if (recordList != null) {
-			this.userCheckOutRecord = new UserCheckOutRecordPanel(
-					this.userService.formatUserCheckOutRecord(recordList));
+			userCheckOutRecord = new CommonTablePanel(
+					UserService.formatUserCheckOutRecord(recordList),
+					commonService.getRecordTableHead(),
+					commonService.getRecordTableWidth(), CommonService.HEIGHT,
+					false, null);
 			loadRightPanel(UserService.RECORDPANEL);
 			return true;
 		}
@@ -195,6 +228,7 @@ public class MainFrame extends JFrame implements ActionListener {
 	 * 用户借书相关动作
 	 */
 	public void checkOutBook(int orderNumber) {
+
 		// 检测借书数量是否达到上限
 		if (this.userService.isReachBookCeiling(reader)) {
 			JOptionPane.showMessageDialog(this, "借阅失败，已达当前会员等级借阅最大数量！请还书后再借阅！",
@@ -213,8 +247,8 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.userService.updateBorrowNumber(reader);
 
 		// 弹窗提示借书成功
-		JOptionPane.showMessageDialog(this, "借阅成功！记得按时归还哦~", "提示",
-				JOptionPane.YES_OPTION);
+		JOptionPane.showMessageDialog(null, "借阅成功！记得按时归还哦~", "提示",
+				JOptionPane.PLAIN_MESSAGE, new ImageIcon("image/success.png"));
 
 		// 更新面板
 		this.updateSearchResultPanel();

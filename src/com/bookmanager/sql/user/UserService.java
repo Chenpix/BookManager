@@ -14,7 +14,6 @@ import com.bookmanager.sql.common.Sentence;
 
 public class UserService {
 	
-	public static final int SEARCHPANEL = 1000;
 	public static final int PINFOPANEL = 1001;
 	public static final int RECORDPANEL = 1002;
 	public static final int RESULTPANEL = 1003;
@@ -53,7 +52,7 @@ public class UserService {
 	 *            原始数据
 	 * @return 转换后的二维Object数组
 	 */
-	public Object[][] formatUserBookList(List<Book> bookList) {
+	public static Object[][] formatUserBookList(List<Book> bookList) {
 		Object[][] list = new Object[bookList.size()][6];
 		int i = 0;
 		for (Book book : bookList) {
@@ -73,7 +72,7 @@ public class UserService {
 	 *            原始数据
 	 * @return 转换后的二维Object数组
 	 */
-	public Object[][] formatUserCheckOutRecord(List<CheckOutRecord> recordList) {
+	public static Object[][] formatUserCheckOutRecord(List<CheckOutRecord> recordList) {
 		Object[][] list = new Object[recordList.size()][6];
 		int i = 0;
 		for (CheckOutRecord record : recordList) {
@@ -145,7 +144,6 @@ public class UserService {
 	public List<CheckOutRecord> getBorrowRecordList(Reader reader, String limit) {
 		List<CheckOutRecord> recordList = new ArrayList<CheckOutRecord>();
 		String sql = mySentence.getCheckOutRecordSQL(reader, limit);
-		System.out.println(sql);
 		try {
 			ResultSet resultSet = myStatement.executeQuery(sql);
 			if( !this.fillCheckOutRecord(resultSet, recordList) ) {
@@ -183,4 +181,6 @@ public class UserService {
 		}
 		return true;
 	}
+	
+	
 }

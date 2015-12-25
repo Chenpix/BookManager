@@ -81,20 +81,33 @@ public class Sentence {
 	 * @return
 	 */
 	public String getCheckOutRecordSQL(Reader reader, String limit) {
-		String i = "0";
-		if( limit.equals("半年内")) {
-			i = "6";
+		String tmp = "SELECT book_name,author,reader_name,date_borrow,date_return,loss "
+				+ "FROM book,borrow,reader WHERE "
+				+ "reader.reader_id = borrow.reader_id AND "
+				+ "book.book_id = borrow.book_id";
+		if( limit == null ) {
+			return tmp;
+		}
+		else if( limit.equals("半年内")) {
+			tmp += " AND borrow.date_borrow between dateadd(MONTH,-6,GETDATE()) and GETDATE()";
 		}
 		else if( limit.equals("一年内") ) {
-			i = "12";
+			tmp = " AND borrow.date_borrow between dateadd(MONTH,-12,GETDATE()) and GETDATE()";
 		}
-		return "SELECT book_name,author,reader_name,date_borrow,date_return,loss "
-				+ "FROM book,borrow,reader "
-				+ "WHERE reader.reader_id ='"
-				+ reader.getId() + "' AND "
-				+ "reader.reader_id = borrow.reader_id AND "
-				+ "book.book_id = borrow.book_id AND "
-				+ "borrow.date_borrow between dateadd(MONTH,-"
-				+ i + ",GETDATE()) and GETDATE()";
+		tmp += " AND reader.reader_id ='"
+					+ reader.getId() +"'";
+		return tmp;
+	}
+	
+	public String getReaderListSQL(String name, String id) {
+		StringBuffer sb = new StringBuffer("SELECT * FROM reader WHERE AND ");
+		if( name != null && !name.equals("") ) {
+			sb.append("reader_name='" + name + "' AND ");
+		}
+		if( id != null && !id.equals("") ) {
+			sb.append("reader_id='" + id + "' AND ");
+		}
+		sb.append("1=1");
+		return sb.toString();
 	}
 }

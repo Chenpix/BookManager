@@ -22,6 +22,10 @@ public class Reader {
 		this.password = password;
 	}
 	
+	public Reader() {
+		
+	}
+
 	public String getId() {
 		return id;
 	}
@@ -51,7 +55,12 @@ public class Reader {
 	}
 
 	public void setBirthday(Date date) {
-		this.birthday = date.toString();
+		if(date != null) {
+			this.birthday = date.toString();
+		}
+		else {
+			this.birthday = null;
+		}
 	}
 
 	public int getPhone() {

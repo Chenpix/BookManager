@@ -1,5 +1,6 @@
 package test;
 
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
 import com.bookmanager.frame.LoginFrame;
@@ -12,8 +13,7 @@ public class Test {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		LoginFrame lg = new LoginFrame();
+		LoginFrame lf = new LoginFrame();
 	}
 
 }
