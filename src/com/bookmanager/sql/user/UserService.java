@@ -52,7 +52,7 @@ public class UserService {
 	 *            原始数据
 	 * @return 转换后的二维Object数组
 	 */
-	public static Object[][] formatUserBookList(List<Book> bookList) {
+	public static Object[][] formatBookList(List<Book> bookList) {
 		Object[][] list = new Object[bookList.size()][6];
 		int i = 0;
 		for (Book book : bookList) {
@@ -102,25 +102,6 @@ public class UserService {
 			return false;
 		}
 		return true;
-	}
-	
-	/**
-	 * 查询某用户是否到达借书上限
-	 * @param reader 用户
-	 * @return true为达到上限
-	 */
-	public boolean isReachBookCeiling(Reader reader) {
-		String sql = mySentence.getUserBookLimitSQL(reader);
-		int i = 0;
-		try {
-			ResultSet resultSet = this.myStatement.executeQuery(sql);
-			resultSet.first();
-			i = resultSet.getInt(1) - reader.getBorrowNumber();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return i <= 0? true: false;
 	}
 	
 	public boolean updateBorrowNumber(Reader reader) {

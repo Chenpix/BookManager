@@ -26,7 +26,8 @@ public class CommonTablePanel extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	
 	public static final String CHECK = "CHECK";
-	public static final String INFO = "INFO";
+	public static final String UINFO = "USERINFO";
+	public static final String BINFO = "BOOKINFO";
 	
 	private JTable table;
 
@@ -87,10 +88,17 @@ public class CommonTablePanel extends JPanel implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		if(e.getActionCommand().equals(CommonTablePanel.CHECK)) {
-			MainFrame mf = (MainFrame) JOptionPane.getFrameForComponent(this);
+		MainFrame mf = (MainFrame) JOptionPane.getFrameForComponent(this);
+		switch(e.getActionCommand()) {
+		case CommonTablePanel.CHECK :
 			mf.checkOutBook(table.getSelectedRow());
+			break;
+		case CommonTablePanel.UINFO :
+			mf.showReaderDetail(table.getSelectedRow());
+			break;
+		case CommonTablePanel.BINFO :
+			mf.showBookDetail(table.getSelectedRow());
+			break;
 		}
 	}
 

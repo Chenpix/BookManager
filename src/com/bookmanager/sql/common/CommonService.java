@@ -1,10 +1,14 @@
 package com.bookmanager.sql.common;
 
+import java.awt.Component;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 
 import com.bookmanager.connect.ODBCConnection;
 import com.bookmanager.model.Book;
@@ -13,9 +17,9 @@ import com.bookmanager.model.Reader;
 public class CommonService {
 
 	public static final int SEARCHPANEL = 1000;
-	
+
 	public final static int HEIGHT = 30;
-	
+
 	private Statement myStatement;
 	private Sentence mySentence;
 	private static final CommonService myCommonService = new CommonService();
@@ -133,24 +137,62 @@ public class CommonService {
 	}
 
 	public int[] getRecordTableWidth() {
-		return new int[]{ 200, 50, 50, 100, 100, 50 };
-	} 
-	
+		return new int[] { 200, 50, 50, 100, 100, 50 };
+	}
+
 	public String[] getRecordTableHead() {
-		return new String[]{ "书名", "作者", "借阅人", "借阅日期",
-				"归还日期", "是否遗失" };
+		return new String[] { "书名", "作者", "借阅人", "借阅日期", "归还日期", "是否遗失" };
 	}
-	
+
 	public String[] getBookTableHead(String level) {
-		if(level.equals("ADMIN")) {
-			return new String[]{"书号", "书名", "作者", "出版社", "馆藏数量", "查看详情"};
-		}
-		else {
-			return new String[]{"书号", "书名", "作者", "出版社", "馆藏数量", "借阅"};
+		if (level.equals("ADMIN")) {
+			return new String[] { "书号", "书名", "作者", "出版社", "馆藏数量", "查看详情" };
+		} else {
+			return new String[] { "书号", "书名", "作者", "出版社", "馆藏数量", "借阅" };
 		}
 	}
-	
-	public int[] getBookTableWidth() { 
-		return new int[]{50, 100, 50, 150, 50, 80}; 
+
+	public int[] getBookTableWidth() {
+		return new int[] { 50, 100, 50, 150, 50, 80 };
+	}
+
+	public void showReaderInfor(Reader reader) {
+		int maxNumber = getReaderMaxNumber(reader);
+		JOptionPane.showMessageDialog(null,
+				mySentence.getReaderInfo(reader, maxNumber), "详细资料",
+				JOptionPane.PLAIN_MESSAGE, new ImageIcon());
+	}
+
+	/**
+	 * 查询某用户是否到达借书上限
+	 * 
+	 * @param reader
+	 *            用户
+	 * @return true为达到上限
+	 */
+	public boolean isReachBookCeiling(Reader reader) {
+		int i = getReaderMaxNumber(reader) - reader.getBorrowNumber();
+		return i <= 0 ? true : false;
+	}
+
+	/**
+	 * 查询某用户的最大借书数量
+	 * 
+	 * @param reader
+	 *            用户
+	 * @return true为达到上限
+	 */
+	public int getReaderMaxNumber(Reader reader) {
+		String sql = mySentence.getReaderBookLimitSQL(reader);
+		try {
+			ResultSet resultSet = myStatement.executeQuery(sql);
+			if( resultSet.next() ) {
+				return resultSet.getInt(1);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return -1;
 	}
 }

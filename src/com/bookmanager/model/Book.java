@@ -38,11 +38,11 @@ public class Book {
 		this.author = author;
 		this.publishing = publishing;
 		this.categoryid = "";
-		this.price = -1;
+		this.price = 0;
 		this.publishDate = "";
-		this.quanIn = -1;
-		this.quanOut = -1;
-		this.quanLoss = -1;
+		this.quanIn = 0;
+		this.quanOut = 0;
+		this.quanLoss = 0;
 	}
 
 	public String getBookId() {

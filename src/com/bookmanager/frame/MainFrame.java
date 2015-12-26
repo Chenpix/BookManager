@@ -22,9 +22,10 @@ import com.bookmanager.sql.user.UserService;
 public class MainFrame extends JFrame implements ActionListener {
 
 	private int clickTimes;
-	private String BTBcommand;
+	private String bookButtonType;
 	private Reader reader;
 	private List<Book> bookList;
+	private List<Reader> readerList;
 
 	private CommonService commonService;
 	private UserService userService;
@@ -32,14 +33,18 @@ public class MainFrame extends JFrame implements ActionListener {
 
 	private CommonSearchPanel commonSearch;
 	private UserButtonListPanel userButtonList;
-	private CommonTablePanel userSearchResult;
+	private CommonTablePanel searchBookResult;
+	private CommonTablePanel searchUserResult;
 	private CommonTablePanel userCheckOutRecord;
+	private AdminLayUpBookPanel layUpBook;
 	private AdminButtonListPanel adminButtonList;
+	private AdminSearchUserPanel searchUser;
 	private JPanel rightPanel;
 
 	public MainFrame(Reader reader) {
 		this.reader = reader;
 		this.bookList = new ArrayList<Book>();
+		this.readerList = new ArrayList<Reader>();
 		this.clickTimes = 0;
 		this.initAll();
 	}
@@ -59,7 +64,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.adminService = AdminService.getAdminServiceInstance();
 	}
 
-	public void initContent(String level) {
+	private void initContent(String level) {
 
 		this.commonSearch = new CommonSearchPanel();
 		this.rightPanel = new JPanel(new GridLayout(1, 1));
@@ -71,13 +76,13 @@ public class MainFrame extends JFrame implements ActionListener {
 			this.add(this.adminButtonList, BorderLayout.WEST);
 			initAdminButtonListener();
 			initAdminService();
-			BTBcommand = CommonTablePanel.CHECK;
+			bookButtonType = CommonTablePanel.BINFO;
 		} else {
 			this.userButtonList = new UserButtonListPanel();
 			this.add(this.userButtonList, BorderLayout.WEST);
 			initUserButtonListener();
 			initUserService();
-			BTBcommand = CommonTablePanel.INFO;
+			bookButtonType = CommonTablePanel.CHECK;
 		}
 		initCommonButtonListener();
 	}
@@ -94,14 +99,18 @@ public class MainFrame extends JFrame implements ActionListener {
 	private void initAdminButtonListener() {
 		this.adminButtonList.getSearchBookButton().setActionCommand("LEND");
 		this.adminButtonList.getSearchBookButton().addActionListener(this);
+		this.adminButtonList.getSearchUserButton().setActionCommand("READER");
+		this.adminButtonList.getSearchUserButton().addActionListener(this);
+		this.adminButtonList.getLayUpBookButton().setActionCommand("LAYUP");
+		this.adminButtonList.getLayUpBookButton().addActionListener(this);
 	}
 
 	private void initCommonButtonListener() {
 		this.commonSearch.getSearchButton().setActionCommand("SEARCH");
 		this.commonSearch.getSearchButton().addActionListener(this);
 	}
-	
-	public void initFrame() {
+
+	private void initFrame() {
 		this.setSize(800, 500);
 		this.setVisible(true);
 		this.setLocationRelativeTo(null);
@@ -133,8 +142,17 @@ public class MainFrame extends JFrame implements ActionListener {
 						JOptionPane.YES_OPTION);
 			}
 			break;
+			
+		case "READER":
+			this.readerList.clear();
+			this.loadRightPanel(AdminService.READER);
+			break;
+			
+		case "LAYUP":
+			this.loadRightPanel(AdminService.LAYUP);
+			break;
 		}
-		if( clickTimes++ == 3 ) {
+		if (clickTimes++ == 3) {
 			System.gc();
 			clickTimes = 0;
 		}
@@ -155,12 +173,30 @@ public class MainFrame extends JFrame implements ActionListener {
 			break;
 
 		case UserService.RESULTPANEL:
-			this.rightPanel.add(userSearchResult);
+			this.rightPanel.add(searchBookResult);
 			break;
 
 		case UserService.RECORDPANEL:
 			this.rightPanel.add(userCheckOutRecord);
 
+		case AdminService.READER:
+			if (this.searchUser == null) {
+				searchUser = new AdminSearchUserPanel();
+			}
+			this.rightPanel.add(searchUser);
+			break;
+
+		case AdminService.URESULT:
+			this.rightPanel.add(searchUserResult);
+			break;
+
+		case AdminService.LAYUP:
+			if (this.layUpBook == null) {
+				layUpBook = new AdminLayUpBookPanel(adminService.getAllCategory());
+			}
+			this.rightPanel.add(layUpBook);
+			break;
+			
 		default:
 			break;
 		}
@@ -178,11 +214,11 @@ public class MainFrame extends JFrame implements ActionListener {
 			return false;
 		}
 
-		this.userSearchResult = new CommonTablePanel(
-				UserService.formatUserBookList(bookList),
+		this.searchBookResult = new CommonTablePanel(
+				UserService.formatBookList(bookList),
 				commonService.getBookTableHead(reader.getLevel()),
 				commonService.getBookTableWidth(), CommonService.HEIGHT, true,
-				BTBcommand);
+				bookButtonType);
 		loadRightPanel(UserService.RESULTPANEL);
 		return true;
 	}
@@ -192,11 +228,11 @@ public class MainFrame extends JFrame implements ActionListener {
 	 */
 	private void updateSearchResultPanel() {
 		// TODO
-		this.userSearchResult = new CommonTablePanel(
-				UserService.formatUserBookList(bookList),
+		this.searchBookResult = new CommonTablePanel(
+				UserService.formatBookList(bookList),
 				commonService.getBookTableHead(reader.getLevel()),
 				commonService.getBookTableWidth(), CommonService.HEIGHT, true,
-				BTBcommand);
+				bookButtonType);
 		loadRightPanel(UserService.RESULTPANEL);
 	}
 
@@ -225,23 +261,27 @@ public class MainFrame extends JFrame implements ActionListener {
 	}
 
 	/**
-	 * 用户借书相关动作
+	 * 对外接口——用户借书动作
+	 * 
+	 * @param index
+	 *            选中行号
 	 */
-	public void checkOutBook(int orderNumber) {
+	public void checkOutBook(int index) {
+
+		// 检测当前用户是否被挂失
 
 		// 检测借书数量是否达到上限
-		if (this.userService.isReachBookCeiling(reader)) {
+		if (commonService.isReachBookCeiling(reader)) {
 			JOptionPane.showMessageDialog(this, "借阅失败，已达当前会员等级借阅最大数量！请还书后再借阅！",
 					"提示", JOptionPane.YES_OPTION);
 			return;
 		}
 
 		// 执行库存数量变化操作
-		this.userService.updateBookQuanForCheckOut(bookList.get(orderNumber));
+		this.userService.updateBookQuanForCheckOut(bookList.get(index));
 
 		// 增加借书记录
-		this.userService
-				.insertCheckOutRecord(bookList.get(orderNumber), reader);
+		this.userService.insertCheckOutRecord(bookList.get(index), reader);
 
 		// 借书本数加一
 		this.userService.updateBorrowNumber(reader);
@@ -254,4 +294,55 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.updateSearchResultPanel();
 	}
 
+	/**
+	 * 对外接口——管理员查询用户功能
+	 * 
+	 * @param name
+	 *            用户姓名（支持模糊）
+	 * @param id
+	 *            用户编号
+	 * @return
+	 */
+	public boolean searchUser(String name, String id) {
+		if ((readerList = adminService.getReaderList(name, id)) == null) {
+			return false;
+		}
+		this.searchUserResult = new CommonTablePanel(
+				adminService.formatUserList(readerList),
+				adminService.getReaderTableHead(),
+				adminService.getReaderTableWidth(), CommonService.HEIGHT, true,
+				CommonTablePanel.UINFO);
+		loadRightPanel(AdminService.URESULT);
+		return true;
+	}
+
+	/**
+	 * 对外接口——对话框显示读者信息细节
+	 * 
+	 * @param index
+	 *            选中行号
+	 */
+	public void showReaderDetail(int index) {
+		commonService.showReaderInfor(readerList.get(index));
+	}
+
+	/**
+	 * 对外接口——对话框显示书本信息细节
+	 * 
+	 * @param index
+	 *            选中行号
+	 */
+	public void showBookDetail(int index) {
+		adminService.showBookDetail(bookList.get(index));
+	}
+
+	/**
+	 * 对外接口——书籍存入数据库
+	 * 
+	 * @param book 待存储书
+	 */
+	public void layUpBookToDB(Book book) {
+		book.setBookId(adminService.genBookID("b", adminService.getLastBookID()));
+		adminService.layUpBook(book);
+	}
 }
