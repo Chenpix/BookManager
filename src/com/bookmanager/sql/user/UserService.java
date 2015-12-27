@@ -52,15 +52,27 @@ public class UserService {
 	 *            原始数据
 	 * @return 转换后的二维Object数组
 	 */
-	public static Object[][] formatBookList(List<Book> bookList) {
-		Object[][] list = new Object[bookList.size()][6];
+	public static Object[][] formatBookList(List<Book> bookList,int length) {
+		Object[][] list = new Object[bookList.size()][length];
 		int i = 0;
-		for (Book book : bookList) {
-			list[i][0] = book.getBookId();
-			list[i][1] = book.getBookName();
-			list[i][2] = book.getAuthor();
-			list[i][3] = book.getPublishing();
-			list[i++][4] = book.getQuanIn();
+		if(length == 6) {
+			for (Book book : bookList) {
+				list[i][0] = book.getBookId();
+				list[i][1] = book.getBookName();
+				list[i][2] = book.getAuthor();
+				list[i][3] = book.getPublishing();
+				list[i++][4] = book.getQuanIn();
+			}
+		}
+		else if(length == 7) {
+			for (Book book : bookList) {
+				list[i][0] = book.getBookId();
+				list[i][1] = book.getBookName();
+				list[i][2] = book.getPrice();
+				list[i][3] = book.getPublishing();
+				list[i][4] = book.getQuanIn();
+				list[i++][5] = book.getPublishDate();
+			}
 		}
 		return list;
 	}
@@ -122,20 +134,21 @@ public class UserService {
 	 * @param reader 当前用户
 	 * @return 用户的借阅记录列表
 	 */
-	public List<CheckOutRecord> getBorrowRecordList(Reader reader, String limit) {
-		List<CheckOutRecord> recordList = new ArrayList<CheckOutRecord>();
+	public boolean getBorrowRecordList(List<CheckOutRecord> recordList, 
+			Reader reader, String limit) {
+		
 		String sql = mySentence.getCheckOutRecordSQL(reader, limit);
 		try {
 			ResultSet resultSet = myStatement.executeQuery(sql);
 			if( !this.fillCheckOutRecord(resultSet, recordList) ) {
-				return null;
+				return false;
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		return recordList;
+		return true;
 	}
 
 	private boolean fillCheckOutRecord(ResultSet resultSet, List<CheckOutRecord> recordList) {

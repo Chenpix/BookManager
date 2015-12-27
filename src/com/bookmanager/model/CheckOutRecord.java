@@ -4,6 +4,7 @@ import java.sql.Date;
 
 public class CheckOutRecord {
 
+	private int recordID;
 	private String readerID;
 	private String readerName;
 	private String author;
@@ -11,6 +12,7 @@ public class CheckOutRecord {
 	private String bookName;
 	private String dateBorrow;
 	private String dateReturn;
+	private int overDueDay;
 	private boolean loss;
 	
 	public String getReaderID() {
@@ -86,5 +88,25 @@ public class CheckOutRecord {
 		this.loss = (loss == 1? true:false);
 	}
 	
+	public int getRecordID() {
+		return recordID;
+	}
+
+	public void setRecordID(int recordID) {
+		this.recordID = recordID;
+	}
+
+	public void setDateBorrow(String dateBorrow) {
+		this.dateBorrow = dateBorrow;
+	}
+	
+	public int getOverDueDay() {
+		return overDueDay;
+	}
+
+	public void setOverDueDay(int overDueDay) {
+		this.overDueDay = overDueDay;
+	}
+
 	public CheckOutRecord() {}
 }

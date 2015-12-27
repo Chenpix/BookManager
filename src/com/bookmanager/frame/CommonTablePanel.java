@@ -28,6 +28,8 @@ public class CommonTablePanel extends JPanel implements ActionListener {
 	public static final String CHECK = "CHECK";
 	public static final String UINFO = "USERINFO";
 	public static final String BINFO = "BOOKINFO";
+	public static final String ODUE = "OVERDUE";
+	public static final String RBOOK = "RETURN";
 	
 	private JTable table;
 
@@ -98,6 +100,12 @@ public class CommonTablePanel extends JPanel implements ActionListener {
 			break;
 		case CommonTablePanel.BINFO :
 			mf.showBookDetail(table.getSelectedRow());
+			break;
+		case CommonTablePanel.ODUE :
+			mf.signBookLoss(table.getSelectedRow());
+			break;
+		case CommonTablePanel.RBOOK :
+			mf.returnBook(table.getSelectedRow());
 			break;
 		}
 	}

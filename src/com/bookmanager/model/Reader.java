@@ -1,6 +1,8 @@
 package com.bookmanager.model;
 
 import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 public class Reader {
 
@@ -20,10 +22,11 @@ public class Reader {
 	public Reader(String id, String password) {
 		this.id = id;
 		this.password = password;
+		this.phone = 0;
 	}
 	
 	public Reader() {
-		
+		this(null, null);
 	}
 
 	public String getId() {
@@ -70,7 +73,7 @@ public class Reader {
 	public void setPhone(int phone) {
 		this.phone = phone;
 	}
-
+	
 	public String getMobile() {
 		return Mobile;
 	}
@@ -119,9 +122,9 @@ public class Reader {
 		this.password = password;
 	}
 
-	public void setSignUpTime(Date date) {
-		// TODO Auto-generated method stub
-		this.signUpTime = date.toString();
+	public void setSignUpTime(java.sql.Date date) {
+		DateFormat format=new SimpleDateFormat("yyyy-MM-dd");
+		this.signUpTime = format.format(date);
 	}
 	
 	public int getBorrowNumber() {
@@ -130,6 +133,15 @@ public class Reader {
 
 	public void setBorrowNumber(int borrowNumber) {
 		this.borrowNumber = borrowNumber;
+	}
+
+	public void setBirthday(int year, int month,
+			int day) {
+		this.birthday = year + "-" + month + "-" + day;
+	}
+
+	public void setSignUpTime(java.util.Date date) {
+		this.signUpTime = date.toString();
 	}
 
 }

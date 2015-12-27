@@ -11,6 +11,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
 import com.bookmanager.connect.ODBCConnection;
+import com.bookmanager.frame.CommonTablePanel;
 import com.bookmanager.model.Book;
 import com.bookmanager.model.Reader;
 
@@ -141,26 +142,41 @@ public class CommonService {
 	}
 
 	public String[] getRecordTableHead() {
-		return new String[] { "书名", "作者", "借阅人", "借阅日期", "归还日期", "是否遗失" };
+		return new String[] { "书名", "作者", "借阅人", "借阅日期", "归还日期", "是否挂失" };
 	}
 
 	public String[] getBookTableHead(String level) {
 		if (level.equals("ADMIN")) {
-			return new String[] { "书号", "书名", "作者", "出版社", "馆藏数量", "查看详情" };
+			return new String[] { "书号", "书名", "作者", "出版社", "馆藏数量", "入馆时间", "查看详情" };
 		} else {
 			return new String[] { "书号", "书名", "作者", "出版社", "馆藏数量", "借阅" };
 		}
 	}
 
-	public int[] getBookTableWidth() {
-		return new int[] { 50, 100, 50, 150, 50, 80 };
+	public int[] getBookTableWidth(String type) {
+		if(type.equals(CommonTablePanel.BINFO)) {
+			return new int[] { 50, 100, 50, 100, 50, 80, 80};
+		}
+		else if( type.equals(CommonTablePanel.CHECK)) {
+			return new int[] { 50, 100, 50, 100, 50, 80};
+		}
+		return null;
 	}
+	
 
 	public void showReaderInfor(Reader reader) {
 		int maxNumber = getReaderMaxNumber(reader);
-		JOptionPane.showMessageDialog(null,
-				mySentence.getReaderInfo(reader, maxNumber), "详细资料",
-				JOptionPane.PLAIN_MESSAGE, new ImageIcon());
+		if(reader.getSex().equals("女")) {
+			JOptionPane.showMessageDialog(null,
+					mySentence.getReaderInfo(reader, maxNumber), "详细资料",
+					JOptionPane.PLAIN_MESSAGE, new ImageIcon("image/female.png"));
+		}
+		else {
+			JOptionPane.showMessageDialog(null,
+					mySentence.getReaderInfo(reader, maxNumber), "详细资料",
+					JOptionPane.PLAIN_MESSAGE, new ImageIcon("image/male.png"));
+		}
+		
 	}
 
 	/**

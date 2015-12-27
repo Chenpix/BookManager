@@ -13,6 +13,7 @@ public class ODBCConnection {
 	private static String userName = "sa";
 	private static String userPassword = "";
 	private static Connection myConnection;
+	private static Statement myStatement;
 
 	public ODBCConnection() {
 
@@ -65,10 +66,13 @@ public class ODBCConnection {
 
 	public static Statement getStatement() {
 		try {
-			dbConnect();
-			return myConnection.createStatement(
-					ResultSet.TYPE_SCROLL_INSENSITIVE,
-					ResultSet.CONCUR_READ_ONLY);
+			if(myStatement == null) {
+				dbConnect();
+				myStatement = myConnection.createStatement(
+						ResultSet.TYPE_SCROLL_INSENSITIVE,
+						ResultSet.CONCUR_READ_ONLY);
+			}
+			return myStatement;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

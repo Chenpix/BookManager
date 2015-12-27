@@ -151,7 +151,7 @@ public class AdminLayUpBookPanel extends JPanel implements ActionListener {
 
 	private String detectionInput() {
 		if (bookNameField.getText().equals("")) {
-			return "姓名不可为空，请重新输入！";
+			return "书名不可为空，请重新输入！";
 		}
 		if (authorField.getText().equals("")) {
 			return "作者不可为空，请重新输入！";

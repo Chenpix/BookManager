@@ -12,48 +12,50 @@ import javax.swing.JOptionPane;
 
 import com.bookmanager.connect.ODBCConnection;
 import com.bookmanager.model.Book;
+import com.bookmanager.model.CheckOutRecord;
 import com.bookmanager.model.Reader;
 import com.bookmanager.sql.common.CommonService;
 import com.bookmanager.sql.common.Sentence;
 
 public class AdminService {
-	
+
 	public static final int READER = 2000;
 	public static final int URESULT = 2001;
 	public static final int LAYUP = 2002;
-	
+	public static final int SIGNUP = 2003;
+	public static final int ODRECORD = 2004;
+	public static final int RLIST = 2005;
+
 	private Statement myStatement;
 	private Sentence mySentence;
 	private static final AdminService myAdminService = new AdminService();
-	
-	private AdminService () {
+
+	private AdminService() {
 		mySentence = Sentence.getSentenceInstance();
 		myStatement = ODBCConnection.getStatement();
 	}
-	
+
 	public static AdminService getAdminServiceInstance() {
 		return myAdminService;
 	}
-	
-	public List<Reader> getReaderList(String name, String id) {
+
+	public boolean getReaderList(List<Reader> readerList, String name, String id) {
 		String sql = mySentence.getReaderListSQL(name, id);
-		List<Reader> readerList = new ArrayList<Reader>(); 
-		
 		try {
 			ResultSet resultSet = myStatement.executeQuery(sql);
-			if( !fillReaderList(resultSet, readerList) ) {
-				return null;
+			if (fillReaderList(resultSet, readerList)) {
+				return true;
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return readerList;
+		return false;
 	}
 
 	private boolean fillReaderList(ResultSet resultSet, List<Reader> readerList) {
 		try {
-			if( !resultSet.next() ) {
+			if (!resultSet.next()) {
 				return false;
 			}
 			do {
@@ -70,8 +72,8 @@ public class AdminService {
 				reader.setSignUpTime(resultSet.getDate("day"));
 				reader.setBorrowNumber(resultSet.getInt("borrow_number"));
 				readerList.add(reader);
-			} while(resultSet.next());
-			
+			} while (resultSet.next());
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -79,7 +81,7 @@ public class AdminService {
 		}
 		return true;
 	}
-	
+
 	public Object[][] formatUserList(List<Reader> readerList) {
 		Object[][] list = new Object[readerList.size()][5];
 		int i = 0;
@@ -91,13 +93,13 @@ public class AdminService {
 		}
 		return list;
 	}
-	
+
 	public String[] getReaderTableHead() {
-		return new String[]{"读者编号", "读者姓名", "会员等级", "联系电话", "详细信息"};
+		return new String[] { "读者编号", "读者姓名", "会员等级", "联系电话", "详细信息" };
 	}
-	
+
 	public int[] getReaderTableWidth() {
-		return new int[]{80, 50, 50, 100, 50};
+		return new int[] { 80, 50, 50, 100, 50 };
 	}
 
 	public void showBookDetail(Book book) {
@@ -110,10 +112,10 @@ public class AdminService {
 	private String getCategory(Book book) {
 		// TODO Auto-generated method stub
 		String sql = mySentence.getCategorySQL(book);
-		
+
 		try {
 			ResultSet resultSet = myStatement.executeQuery(sql);
-			if( resultSet.next() ) {
+			if (resultSet.next()) {
 				return resultSet.getString(1);
 			}
 		} catch (SQLException e) {
@@ -122,11 +124,167 @@ public class AdminService {
 		}
 		return null;
 	}
-	
+
 	public boolean layUpBook(Book book) {
 		String sql = mySentence.getLayUpBookSQL(book);
-		 try {
-			if( myStatement.execute(sql) ) {
+		try {
+			if (myStatement.execute(sql)) {
+				return true;
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	/**
+	 * 从数据库中查询最后一条ID
+	 * 
+	 * @return
+	 */
+	public String getLastID(int choice) {
+		String sql = null;
+		if (choice == AdminService.LAYUP) {
+			sql = mySentence.getLastBookIDSQL();
+		} else if (choice == AdminService.SIGNUP) {
+			sql = mySentence.getLastReaderIDSQL();
+		}
+		try {
+			ResultSet resultSet = myStatement.executeQuery(sql);
+			if (resultSet.next()) {
+				return resultSet.getString(1);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * 生成顺序ID号码
+	 * 
+	 * @param head
+	 *            ID前缀
+	 * @param lastID
+	 *            最后一个ID号
+	 * @return 生成的ID号
+	 */
+	public String genBookID(String head, String lastID) {
+		String now = head;
+		String last = lastID.substring(head.length());
+		int tmp = Integer.parseInt(last) + 1;
+		last = String.valueOf(tmp);
+		for (tmp = last.length(); tmp < 3; tmp++) {
+			now += "0";
+		}
+		return now + last;
+	}
+
+	/**
+	 * 查询所有的类别名
+	 * 
+	 * @return
+	 */
+	public String[] getAllCategoryOrLevel(int type) {
+		String sql = null;
+		if (type == AdminService.LAYUP) {
+			sql = mySentence.getAllCategorySQL();
+		} else if (type == AdminService.SIGNUP) {
+			sql = mySentence.getAllLevelSQL();
+		}
+		try {
+			ResultSet resultSet = myStatement.executeQuery(sql);
+			if (resultSet.last()) {
+				String[] combo = new String[resultSet.getRow()];
+				resultSet.first();
+				int i = 0;
+				do {
+					combo[i++] = resultSet.getString(1);
+				} while (resultSet.next());
+				return combo;
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public String[] getCardType() {
+		return new String[] { "身份证", "学生证", "士兵证", "一卡通" };
+	}
+
+	public void signUpReader(Reader reader) {
+		String sql = mySentence.getSignUpReaderSQL(reader);
+		try {
+			myStatement.execute(sql);
+			if (reader.getPhone() != 0) {
+				myStatement.executeUpdate(mySentence.getUpdatePhoneSQL(reader));
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	/**
+	 * 填充逾期列表
+	 * 
+	 * @param overDueList
+	 * @return
+	 */
+	public boolean getOverDueRecordList(List<CheckOutRecord> overDueList) {
+		String sql = mySentence.getOverDueRecordSQL();
+		try {
+			ResultSet resultSet = myStatement.executeQuery(sql);
+			if (!fillOverDueList(resultSet, overDueList)) {
+				return false;
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true;
+	}
+
+	private boolean fillOverDueList(ResultSet resultSet,
+			List<CheckOutRecord> overDueList) {
+		try {
+			if (!resultSet.next()) {
+				return false;
+			}
+			do {
+				CheckOutRecord record = new CheckOutRecord();
+				record.setRecordID(resultSet.getInt(1));
+				record.setBookID(resultSet.getString(2));
+				record.setReaderID(resultSet.getString(3));
+				record.setDateBorrow(resultSet.getDate(4));
+				record.setOverDueDay(resultSet.getInt(5));
+				record.setBookName(resultSet.getString(6));
+				overDueList.add(record);
+			} while (resultSet.next());
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * 填充可还书队列
+	 * @param recordList
+	 * @return
+	 */
+	public boolean getReturnList(List<CheckOutRecord> recordList) {
+		String sql = mySentence.getBookReturnSQL();
+		try {
+			ResultSet resultSet = myStatement.executeQuery(sql);
+			if(fillReturnList(resultSet, recordList)) {
 				return true;
 			}
 		} catch (SQLException e) {
@@ -136,62 +294,102 @@ public class AdminService {
 		return false;
 	}
 	
-	/**
-	 * 从数据库中查询最后一条BookID
-	 * @return
-	 */
-	public String getLastBookID() {
-		String sql = mySentence.getLastBookIDSQL();
+	private boolean fillReturnList(ResultSet resultSet,
+			List<CheckOutRecord> returnList) {
 		try {
-			ResultSet resultSet = myStatement.executeQuery(sql);
-			if( resultSet.next() ) {
-				return resultSet.getString(1);
+			if (!resultSet.next()) {
+				return false;
 			}
+			do {
+				CheckOutRecord record = new CheckOutRecord();
+				record.setRecordID(resultSet.getInt(1));
+				record.setBookID(resultSet.getString(2));
+				record.setBookName(resultSet.getString(3));
+				record.setAuthor(resultSet.getString(4));
+				record.setReaderName(resultSet.getString(5));
+				record.setDateBorrow(resultSet.getDate(6));
+				record.setReaderID(resultSet.getString(7));
+				returnList.add(record);
+			} while (resultSet.next());
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	public Object[][] formatOverDueRecord(List<CheckOutRecord> overDueList) {
+		Object[][] list = new Object[overDueList.size()][7];
+		int i = 0;
+		for (CheckOutRecord record : overDueList) {
+			list[i][0] = record.getRecordID();
+			list[i][1] = record.getBookID();
+			list[i][2] = record.getBookName();
+			list[i][3] = record.getReaderID();
+			list[i][4] = record.getDateBorrow();
+			list[i++][5] = record.getOverDueDay();
+		}
+		return list;
+	}
+	
+	public Object[][] formatReturnList(List<CheckOutRecord> returnList ) {
+		Object[][] list = new Object[returnList.size()][7];
+		int i = 0;
+		for (CheckOutRecord record : returnList) {
+			list[i][0] = record.getRecordID();
+			list[i][1] = record.getBookID();
+			list[i][2] = record.getBookName();
+			list[i][3] = record.getAuthor();
+			list[i][4] = record.getReaderName();
+			list[i++][5] = record.getDateBorrow();
+		}
+		return list;
+	}
+
+	public String[] getOverDueRecordTableHead() {
+		return new String[]{"借阅记录编号", "书号", "书名", "读者ID", "借阅时间", "逾期天数", "挂失"};
+	}
+	
+	public int[] getOverDueRecordTableWidth() {
+		return new int[]{80, 50, 100, 50, 70, 50, 80};
+	}
+	
+	public String[] getReturnTableHead() {
+		return new String[]{"借阅记录编号", "书号", "书名", "作者", "读者姓名", "借阅时间", "还书"};
+	}
+	
+	public int[] getReturnTableWidth() {
+		return new int[]{80, 50, 100, 50, 70, 80, 60};
+	}
+	
+	public boolean signLossRecord(CheckOutRecord record) {
+		String sql = mySentence.getUpdateLossSQL(record);
+		try {
+			myStatement.executeUpdate(sql);
+			return true;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
+		return false;
 	}
 	
 	/**
-	 * 生成顺序ID号码
-	 * @param head ID前缀
-	 * @param lastID 最后一个ID号
-	 * @return 生成的ID号
-	 */
-	public String genBookID(String head, String lastID) {
-		String now = head;
-		String last = lastID.substring(head.length());
-		int tmp = Integer.parseInt(last) + 1;
-		last = String.valueOf(tmp);
-		for(tmp = last.length() ; tmp < 3 ; tmp++) {
-			now += "0";
-		}
-		return now + last;
-	}
-
-	/**
-	 * 查询所有的类别名
+	 * 对借书记录进行还书
+	 * @param record
 	 * @return
 	 */
-	public String[] getAllCategory() {
-		String sql = mySentence.getAllCategorySQL();
+	public boolean updateReturnBook(CheckOutRecord record) {
+		String sql = mySentence.getUpdateReturnSQL(record);
 		try {
-			ResultSet resultSet = myStatement.executeQuery(sql);
-			if( resultSet.last() ) {
-				String[] combo = new String[resultSet.getRow()];
-				resultSet.first();
-				int i = 0;
-				do {
-					combo[i++] = resultSet.getString(1);
-				} while(resultSet.next());
-				return combo;
-			}
+			myStatement.executeUpdate(sql);
+			return true;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
+		return false;
 	}
 }

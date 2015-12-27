@@ -26,6 +26,7 @@ public class MainFrame extends JFrame implements ActionListener {
 	private Reader reader;
 	private List<Book> bookList;
 	private List<Reader> readerList;
+	private List<CheckOutRecord> recordList;
 
 	private CommonService commonService;
 	private UserService userService;
@@ -36,15 +37,19 @@ public class MainFrame extends JFrame implements ActionListener {
 	private CommonTablePanel searchBookResult;
 	private CommonTablePanel searchUserResult;
 	private CommonTablePanel userCheckOutRecord;
+	private CommonTablePanel overDueRecord;
+	private CommonTablePanel returnBook;
 	private AdminLayUpBookPanel layUpBook;
 	private AdminButtonListPanel adminButtonList;
 	private AdminSearchUserPanel searchUser;
+	private AdminSignUpReaderPanel signUp;
 	private JPanel rightPanel;
 
 	public MainFrame(Reader reader) {
 		this.reader = reader;
 		this.bookList = new ArrayList<Book>();
 		this.readerList = new ArrayList<Reader>();
+		this.recordList = new ArrayList<CheckOutRecord>();
 		this.clickTimes = 0;
 		this.initAll();
 	}
@@ -103,6 +108,12 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.adminButtonList.getSearchUserButton().addActionListener(this);
 		this.adminButtonList.getLayUpBookButton().setActionCommand("LAYUP");
 		this.adminButtonList.getLayUpBookButton().addActionListener(this);
+		this.adminButtonList.getSignUpButton().setActionCommand("SIGNUP");
+		this.adminButtonList.getSignUpButton().addActionListener(this);
+		this.adminButtonList.getOverDueButton().setActionCommand("OVERDUE");
+		this.adminButtonList.getOverDueButton().addActionListener(this);
+		this.adminButtonList.getReturnBookButton().setActionCommand("RETURN");
+		this.adminButtonList.getReturnBookButton().addActionListener(this);
 	}
 
 	private void initCommonButtonListener() {
@@ -112,6 +123,7 @@ public class MainFrame extends JFrame implements ActionListener {
 
 	private void initFrame() {
 		this.setSize(800, 500);
+		this.setResizable(false);
 		this.setVisible(true);
 		this.setLocationRelativeTo(null);
 		this.setLayout(new BorderLayout());
@@ -136,21 +148,45 @@ public class MainFrame extends JFrame implements ActionListener {
 			break;
 
 		case "RECORD":
+			this.recordList.clear();
 			if (!genCheckOutRecordPanel()) {
 				// 借阅记录列表为空
-				JOptionPane.showMessageDialog(this, "暂时没有符合条件的借阅记录！", "查询失败",
+				JOptionPane.showMessageDialog(this, "查询失败！", "提醒",
 						JOptionPane.YES_OPTION);
 			}
+			break;
+
+		case "INFO":
+			commonService.showReaderInfor(reader);
 			break;
 			
 		case "READER":
 			this.readerList.clear();
 			this.loadRightPanel(AdminService.READER);
 			break;
-			
+
 		case "LAYUP":
 			this.loadRightPanel(AdminService.LAYUP);
 			break;
+
+		case "SIGNUP":
+			this.loadRightPanel(AdminService.SIGNUP);
+			break;
+
+		case "OVERDUE":
+			recordList.clear();
+			if (!genOverDueRecordPanel()) {
+				JOptionPane.showMessageDialog(this, "暂时没有逾期未还的的图书！", "查询失败",
+						JOptionPane.YES_OPTION);
+			}
+			break;
+
+		case "RETURN":
+			recordList.clear();
+			if (!genReturnBookPanel()) {
+				JOptionPane.showMessageDialog(this, "暂时没有待还的的图书！", "查询失败",
+						JOptionPane.YES_OPTION);
+			}
 		}
 		if (clickTimes++ == 3) {
 			System.gc();
@@ -178,6 +214,7 @@ public class MainFrame extends JFrame implements ActionListener {
 
 		case UserService.RECORDPANEL:
 			this.rightPanel.add(userCheckOutRecord);
+			break;
 
 		case AdminService.READER:
 			if (this.searchUser == null) {
@@ -192,11 +229,26 @@ public class MainFrame extends JFrame implements ActionListener {
 
 		case AdminService.LAYUP:
 			if (this.layUpBook == null) {
-				layUpBook = new AdminLayUpBookPanel(adminService.getAllCategory());
+				layUpBook = new AdminLayUpBookPanel(
+						adminService.getAllCategoryOrLevel(AdminService.LAYUP));
 			}
 			this.rightPanel.add(layUpBook);
 			break;
+
+		case AdminService.SIGNUP:
+			if (this.signUp == null) {
+				signUp = new AdminSignUpReaderPanel(adminService.getCardType(),
+						adminService.getAllCategoryOrLevel(AdminService.SIGNUP));
+			}
+			this.rightPanel.add(signUp);
+			break;
+
+		case AdminService.ODRECORD:
+			this.rightPanel.add(overDueRecord);
+			break;
 			
+		case AdminService.RLIST:
+			this.rightPanel.add(returnBook);
 		default:
 			break;
 		}
@@ -214,12 +266,7 @@ public class MainFrame extends JFrame implements ActionListener {
 			return false;
 		}
 
-		this.searchBookResult = new CommonTablePanel(
-				UserService.formatBookList(bookList),
-				commonService.getBookTableHead(reader.getLevel()),
-				commonService.getBookTableWidth(), CommonService.HEIGHT, true,
-				bookButtonType);
-		loadRightPanel(UserService.RESULTPANEL);
+		updateSearchResultPanel();
 		return true;
 	}
 
@@ -228,11 +275,11 @@ public class MainFrame extends JFrame implements ActionListener {
 	 */
 	private void updateSearchResultPanel() {
 		// TODO
+		String[] head = commonService.getBookTableHead(reader.getLevel());
 		this.searchBookResult = new CommonTablePanel(
-				UserService.formatBookList(bookList),
-				commonService.getBookTableHead(reader.getLevel()),
-				commonService.getBookTableWidth(), CommonService.HEIGHT, true,
-				bookButtonType);
+				UserService.formatBookList(bookList, head.length), head,
+				commonService.getBookTableWidth(bookButtonType),
+				CommonService.HEIGHT, true, bookButtonType);
 		loadRightPanel(UserService.RESULTPANEL);
 	}
 
@@ -246,9 +293,12 @@ public class MainFrame extends JFrame implements ActionListener {
 		Object selectedValue = JOptionPane.showInputDialog(null,
 				"请选择您要查询的记录时间", "借阅记录", JOptionPane.INFORMATION_MESSAGE, null,
 				possibleValues, possibleValues[0]);
-		List<CheckOutRecord> recordList = this.userService.getBorrowRecordList(
-				reader, (String) selectedValue);
-		if (recordList != null) {
+		if(selectedValue == null) {
+			return false;
+		}
+		
+		if (userService.getBorrowRecordList(recordList, reader,
+				(String) selectedValue)) {
 			userCheckOutRecord = new CommonTablePanel(
 					UserService.formatUserCheckOutRecord(recordList),
 					commonService.getRecordTableHead(),
@@ -260,6 +310,74 @@ public class MainFrame extends JFrame implements ActionListener {
 		return false;
 	}
 
+	/**
+	 * 生成逾期记录面板
+	 * 
+	 * @return
+	 */
+	private boolean genOverDueRecordPanel() {
+		if (adminService.getOverDueRecordList(recordList)) {
+			overDueRecord = new CommonTablePanel(
+					adminService.formatOverDueRecord(recordList),
+					adminService.getOverDueRecordTableHead(),
+					adminService.getOverDueRecordTableWidth(),
+					CommonService.HEIGHT, true, CommonTablePanel.ODUE);
+			loadRightPanel(AdminService.ODRECORD);
+			return true;
+		}
+		return false;
+	}
+
+	private boolean updateOverDueTable() {
+		if(recordList.size() == 0) {
+			JOptionPane.showMessageDialog(this, "已无逾期记录，返回主页面！", "系统信息",
+					JOptionPane.YES_OPTION);
+			loadRightPanel(CommonService.SEARCHPANEL);
+			return false;
+		}
+		overDueRecord = new CommonTablePanel(
+				adminService.formatOverDueRecord(recordList),
+				adminService.getOverDueRecordTableHead(),
+				adminService.getOverDueRecordTableWidth(),
+				CommonService.HEIGHT, true, CommonTablePanel.ODUE);
+		loadRightPanel(AdminService.ODRECORD);
+		return true;
+	}
+
+	/**
+	 * 生成图书归还列表
+	 * 
+	 * @return
+	 */
+	private boolean genReturnBookPanel() {
+		if (adminService.getReturnList(recordList)) {
+			returnBook = new CommonTablePanel(
+					adminService.formatReturnList(recordList),
+					adminService.getReturnTableHead(),
+					adminService.getReturnTableWidth(), commonService.HEIGHT,
+					true, CommonTablePanel.RBOOK);
+			loadRightPanel(AdminService.RLIST);
+			return true;
+		}
+		return false;
+	}
+
+	private boolean updateReturnTable() {
+		if(recordList.size() == 0) {
+			JOptionPane.showMessageDialog(this, "已无待还书记录，返回主页面！", "系统信息",
+					JOptionPane.YES_OPTION);
+			loadRightPanel(CommonService.SEARCHPANEL);
+			return false;
+		}
+		returnBook = new CommonTablePanel(
+				adminService.formatReturnList(recordList),
+				adminService.getReturnTableHead(),
+				adminService.getReturnTableWidth(), commonService.HEIGHT,
+				true, CommonTablePanel.RBOOK);
+		loadRightPanel(AdminService.RLIST);
+		return true;
+	}
+	
 	/**
 	 * 对外接口——用户借书动作
 	 * 
@@ -304,7 +422,7 @@ public class MainFrame extends JFrame implements ActionListener {
 	 * @return
 	 */
 	public boolean searchUser(String name, String id) {
-		if ((readerList = adminService.getReaderList(name, id)) == null) {
+		if ( !adminService.getReaderList(readerList, name, id)) {
 			return false;
 		}
 		this.searchUserResult = new CommonTablePanel(
@@ -339,10 +457,62 @@ public class MainFrame extends JFrame implements ActionListener {
 	/**
 	 * 对外接口——书籍存入数据库
 	 * 
-	 * @param book 待存储书
+	 * @param book
+	 *            待存储书
 	 */
 	public void layUpBookToDB(Book book) {
-		book.setBookId(adminService.genBookID("b", adminService.getLastBookID()));
+		book.setBookId(adminService.genBookID("b",
+				adminService.getLastID(AdminService.LAYUP)));
 		adminService.layUpBook(book);
+	}
+
+	/**
+	 * 对外接口——挂失
+	 * 
+	 * @param index
+	 */
+	public void signBookLoss(int index) {
+		if (adminService.signLossRecord(recordList.get(index))) {
+			JOptionPane.showMessageDialog(this, "挂失成功！", "系统信息",
+					JOptionPane.YES_OPTION, new ImageIcon("image/success.png"));
+			recordList.remove(index);
+			updateOverDueTable();
+		} else {
+			JOptionPane.showMessageDialog(this, "挂失失败！", "系统信息",
+					JOptionPane.YES_OPTION);
+		}
+	}
+
+	/**
+	 * 对外接口——还书
+	 * 
+	 * @param index
+	 */
+	public void returnBook(int index) {
+		if (adminService.updateReturnBook(recordList.get(index))) {
+			JOptionPane.showMessageDialog(this, "还书成功！", "系统信息",
+					JOptionPane.YES_OPTION, new ImageIcon("image/success.png"));
+			recordList.remove(index);
+			updateReturnTable();
+		}
+		else {
+			JOptionPane.showMessageDialog(this, "还书失败！", "系统信息",
+					JOptionPane.YES_OPTION);
+		}
+	}
+
+	/**
+	 * 对外接口——用户信息存入数据库
+	 * 
+	 * @param reader
+	 *            待存储用户
+	 */
+	public void signUpReaderToDB(Reader reader) {
+		reader.setId(adminService.genBookID("r",
+				adminService.getLastID(AdminService.SIGNUP)));
+		adminService.signUpReader(reader);
+		JOptionPane.showMessageDialog(this, "注册成功！该读者的编号为" + reader.getId() 
+				+ "，请保存好自己的ID号！", "系统信息",
+				JOptionPane.YES_OPTION);
 	}
 }

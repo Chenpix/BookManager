@@ -13,7 +13,7 @@ public class AdminButtonListPanel extends JPanel {
 	private JButton searchBookButton;
 	private JButton searchUserButton;
 	private JButton layUpBookButton;
-	private JButton applyButton;
+	private JButton signUpButton;
 	private JButton returnBookButton;
 	private JButton overDueButton;
 	private JButton noteLossButton;
@@ -30,8 +30,8 @@ public class AdminButtonListPanel extends JPanel {
 		return layUpBookButton;
 	}
 
-	public JButton getApplyButton() {
-		return applyButton;
+	public JButton getSignUpButton() {
+		return signUpButton;
 	}
 
 	public JButton getReturnBookButton() {
@@ -79,13 +79,13 @@ public class AdminButtonListPanel extends JPanel {
 		gbc_insertBookButton.gridy = 5;
 		add(layUpBookButton, gbc_insertBookButton);
 		
-		applyButton = new JButton("\u8BFB\u8005\u767B\u8BB0");
+		signUpButton = new JButton("\u8BFB\u8005\u767B\u8BB0");
 		GridBagConstraints gbc_applyButton = new GridBagConstraints();
 		gbc_applyButton.fill = GridBagConstraints.BOTH;
 		gbc_applyButton.insets = new Insets(0, 0, 5, 5);
 		gbc_applyButton.gridx = 1;
 		gbc_applyButton.gridy = 7;
-		add(applyButton, gbc_applyButton);
+		add(signUpButton, gbc_applyButton);
 		
 		returnBookButton = new JButton("\u56FE\u4E66\u5F52\u8FD8");
 		GridBagConstraints gbc_returnBookButton = new GridBagConstraints();

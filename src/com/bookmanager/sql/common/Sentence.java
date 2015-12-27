@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.bookmanager.model.Book;
+import com.bookmanager.model.CheckOutRecord;
 import com.bookmanager.model.Reader;
 
 public class Sentence {
@@ -93,12 +94,24 @@ public class Sentence {
 		} else if (limit.equals("半年内")) {
 			tmp += " AND borrow.date_borrow between dateadd(MONTH,-6,GETDATE()) and GETDATE()";
 		} else if (limit.equals("一年内")) {
-			tmp = " AND borrow.date_borrow between dateadd(MONTH,-12,GETDATE()) and GETDATE()";
+			tmp += " AND borrow.date_borrow between dateadd(MONTH,-12,GETDATE()) and GETDATE()";
 		}
 		tmp += " AND reader.reader_id ='" + reader.getId() + "'";
 		return tmp;
 	}
 
+	public String getOverDueRecordSQL() {
+		return "SELECT borrow.borrow_id,borrow.book_id,borrow.reader_id,borrow.date_borrow,"
+				+ "datediff(DAY,borrow.date_borrow,GETDATE())-member_level.days,book.book_name "
+				+ "FROM borrow,reader,member_level,book "
+				+ "WHERE borrow.reader_id = reader.reader_id "
+				+ "AND book.book_id = borrow.book_id "
+				+ "AND reader.level = member_level.level "
+				+ "AND member_level.days < datediff(DAY,borrow.date_borrow,GETDATE()) "
+				+ "AND borrow.date_return is null "
+				+ "AND borrow.loss = '0'";
+	}
+	
 	public String getReaderListSQL(String name, String id) {
 		StringBuffer sb = new StringBuffer("SELECT * FROM reader WHERE ");
 		if (name != null && !name.equals("")) {
@@ -111,6 +124,12 @@ public class Sentence {
 		return sb.toString();
 	}
 
+	/**
+	 * 拼接内容——读者详细信息
+	 * @param reader
+	 * @param maxNumber 该读者最大可借书数量
+	 * @return
+	 */
 	public String getReaderInfo(Reader reader, int maxNumber) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("姓名 ： " + reader.getName() + "\n");
@@ -132,6 +151,12 @@ public class Sentence {
 		return sb.toString();
 	}
 
+	/**
+	 * 拼接内容——书本详细信息
+	 * @param book
+	 * @param category
+	 * @return
+	 */
 	public String getBookInfo(Book book, String category) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("书本编号： " + book.getBookId() + " \n");
@@ -181,4 +206,58 @@ public class Sentence {
 	public String getAllCategorySQL() {
 		return "SELECT category FROM book_category";
 	}
+
+	public String getAllLevelSQL() {
+		return "SELECT level FROM member_level WHERE level <> 'ADMIN'";
+	}
+
+	public String getLastReaderIDSQL() {
+		return "SELECT TOP 1 reader_id FROM reader ORDER BY reader_id DESC";
+	}
+
+	public String getSignUpReaderSQL(Reader reader) {
+		return "INSERT INTO reader  " + "VALUES ('" + reader.getId() + "','"
+				+ reader.getName() + "','" + reader.getSex() + "','"
+				+ reader.getBirthday() + "',NULL,'" + reader.getMobile()
+				+ "','" + reader.getCardName() + "','" + reader.getCardId()
+				+ "','" + reader.getLevel() + "',getdate(),'"
+				+ reader.getPassword() + "',0)";
+	}
+
+	public String getUpdatePhoneSQL(Reader reader) {
+		return "UPDATE reader SET phone='" + reader.getPhone()
+				+ "' WHERE reader_id='" + reader.getId() + "'";
+	}
+	
+	/**
+	 * 挂失相关语句，共有三条。对borrow,book,reader三个表进行操作。
+	 * @param record
+	 * @return
+	 */
+	public String getUpdateLossSQL(CheckOutRecord record) {
+		System.out.println(record.getRecordID());
+		return "UPDATE borrow SET loss='1' WHERE borrow_id=" + record.getRecordID() + ";"
+				+ "UPDATE book SET quantity_out=quantity_out-1,quantity_loss=quantity_loss+1 WHERE "
+				+ "book_id='" + record.getBookID() + "';"
+				+ "UPDATE reader SET borrow_number=borrow_number-1 WHERE reader_id='"
+				+ record.getReaderID() + "';";
+	}
+	
+	public String getUpdateReturnSQL(CheckOutRecord record) {
+		return "UPDATE borrow SET date_return=getdate() WHERE borrow_id='" + record.getRecordID()
+				+ "';UPDATE book SET quantity_out=quantity_out-1,quantity_in=quantity_in+1 WHERE "
+				+ "book_id='" + record.getBookID() + "';"
+				+ "UPDATE reader SET borrow_number=borrow_number-1 WHERE reader_id='"
+				+ record.getReaderID() + "';";
+	}
+	
+	public String getBookReturnSQL() {
+		return "SELECT borrow_id,book.book_id,book_name,author,reader_name,"
+				+ "date_borrow,reader.reader_id "
+				+ "FROM borrow,book,reader "
+				+ "WHERE date_return is NULL AND loss=0 "
+				+ "AND book.book_id = borrow.book_id "
+				+ "AND reader.reader_id = borrow.reader_id";
+	}
+	
 }

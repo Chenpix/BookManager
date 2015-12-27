@@ -27,6 +27,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 
 import com.bookmanager.model.Reader;
+import javax.swing.ImageIcon;
 
 public class AdminSearchUserPanel extends JPanel implements ActionListener{
 	
@@ -42,7 +43,8 @@ public class AdminSearchUserPanel extends JPanel implements ActionListener{
 		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(gridBagLayout);
 		
-		JLabel image = new JLabel("New label");
+		JLabel image = new JLabel("");
+		image.setIcon(new ImageIcon("image/searchUser.jpg"));
 		GridBagConstraints gbc_image = new GridBagConstraints();
 		gbc_image.gridwidth = 5;
 		gbc_image.insets = new Insets(0, 0, 5, 5);
