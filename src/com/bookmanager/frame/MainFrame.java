@@ -2,6 +2,7 @@ package com.bookmanager.frame;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.Menu;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -9,6 +10,9 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
@@ -75,7 +79,9 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.rightPanel = new JPanel(new GridLayout(1, 1));
 		this.rightPanel.add(commonSearch);
 		this.add(this.rightPanel, BorderLayout.CENTER);
-
+		
+		initMenuBar();
+		
 		if (level.equals("ADMIN")) {
 			this.adminButtonList = new AdminButtonListPanel();
 			this.add(this.adminButtonList, BorderLayout.WEST);
@@ -90,6 +96,29 @@ public class MainFrame extends JFrame implements ActionListener {
 			bookButtonType = CommonTablePanel.CHECK;
 		}
 		initCommonButtonListener();
+	}
+
+	private void initMenuBar() {
+		JMenuBar mb = new JMenuBar();
+		this.setJMenuBar(mb);
+		JMenu smenu = new JMenu("系统");
+		JMenu imenu = new JMenu("相关");
+		mb.add(smenu);
+		mb.add(imenu);
+		JMenuItem logout = new JMenuItem("登出");
+		JMenuItem info = new JMenuItem("软件信息");
+		smenu.add(logout);
+		imenu.add(info);
+		logout.setActionCommand("LOGOUT");
+		logout.addActionListener(this);
+		info.setActionCommand("ABOUT");
+		info.addActionListener(this);
+		if(!reader.getLevel().equals("ADMIN")) {
+			JMenuItem changePassword = new JMenuItem("修改密码");
+			smenu.add(changePassword);
+			changePassword.setActionCommand("CPASS");
+			changePassword.addActionListener(this);
+		}
 	}
 
 	private void initUserButtonListener() {
@@ -114,6 +143,8 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.adminButtonList.getOverDueButton().addActionListener(this);
 		this.adminButtonList.getReturnBookButton().setActionCommand("RETURN");
 		this.adminButtonList.getReturnBookButton().addActionListener(this);
+		this.adminButtonList.getNoteLossButton().setActionCommand("LOSS");
+		this.adminButtonList.getNoteLossButton().addActionListener(this);
 	}
 
 	private void initCommonButtonListener() {
@@ -122,7 +153,7 @@ public class MainFrame extends JFrame implements ActionListener {
 	}
 
 	private void initFrame() {
-		this.setSize(800, 500);
+		this.setSize(800, 520);
 		this.setResizable(false);
 		this.setVisible(true);
 		this.setLocationRelativeTo(null);
@@ -133,7 +164,6 @@ public class MainFrame extends JFrame implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
 		switch (e.getActionCommand()) {
 		case "SEARCH":
 			if (!genSearchResultPanel()) {
@@ -187,6 +217,25 @@ public class MainFrame extends JFrame implements ActionListener {
 				JOptionPane.showMessageDialog(this, "暂时没有待还的的图书！", "查询失败",
 						JOptionPane.YES_OPTION);
 			}
+			break;
+		
+		case "LOGOUT":
+			this.dispose();
+			System.gc();
+			LoginFrame lf = new LoginFrame();
+			break;
+			
+		case "LOSS":
+			noteLossReader();
+			break;
+		
+		case "CPASS":
+			changePassWord();
+			break;
+			
+		case "ABOUT":
+			showAboutInfo();
+			break;
 		}
 		if (clickTimes++ == 3) {
 			System.gc();
@@ -274,7 +323,6 @@ public class MainFrame extends JFrame implements ActionListener {
 	 * 更新查找结果界面
 	 */
 	private void updateSearchResultPanel() {
-		// TODO
 		String[] head = commonService.getBookTableHead(reader.getLevel());
 		this.searchBookResult = new CommonTablePanel(
 				UserService.formatBookList(bookList, head.length), head,
@@ -379,6 +427,87 @@ public class MainFrame extends JFrame implements ActionListener {
 	}
 	
 	/**
+	 * 挂失函数
+	 */
+	private void noteLossReader() {
+		String readerID = JOptionPane.showInputDialog(this, "请输入您要挂失的用户ID:\n", 
+				"挂失窗口", JOptionPane.QUESTION_MESSAGE);
+		int loss = -1;
+		if(readerID == null) {
+			return;
+		}
+		else if(!readerID.equals("")) {
+			if( (loss = adminService.confirmLossReader(readerID)) == 0 ) {
+				adminService.signLossReader(readerID);
+				JOptionPane.showMessageDialog(null, "挂失成功！", "提示",
+						JOptionPane.PLAIN_MESSAGE, new ImageIcon("image/success.png"));
+				return;
+			}else if(loss == -1) {
+				readerID = "用户不存在，请重新输入！";
+			}else if(loss == 1) {
+				readerID = "用户已挂失，请勿重复操作!";
+			}
+		}
+		else {
+			readerID = "用户名不能为空，请重新输入！";
+		}
+		JOptionPane.showMessageDialog(this, readerID, 
+				"错误", JOptionPane.ERROR_MESSAGE);
+		if(loss != 1) {
+			noteLossReader();
+		}
+	}
+	
+	private void changePassWord() {
+		String now = JOptionPane.showInputDialog(this, "请输入您的现用密码:\n", 
+				"修改密码", JOptionPane.QUESTION_MESSAGE);
+		if(now == null) {
+			return;
+		}
+		else if(now.equals("")) {
+			now = "密码不能为空，请重新输入!";
+		}
+		else if ( !commonService.isLegitimateUser(new Reader(this.reader.getId(),now))) {
+			now = "密码不正确，请重新输入!";
+		}
+		else {
+			String newPW1 = JOptionPane.showInputDialog(this, "请输入您的新密码:\n", 
+					"修改密码", JOptionPane.QUESTION_MESSAGE);
+			String newPW2 = JOptionPane.showInputDialog(this, "请再次输入密码以确认:\n", 
+					"修改密码", JOptionPane.QUESTION_MESSAGE);
+			
+			if(newPW1 == null ) {
+				return;
+			}
+			else if(newPW1.equals("")) {
+				now = "新密码不能为空！";
+			}
+			else if(newPW2 == null) {
+				return;
+			}
+			else if( !newPW1.equals(newPW2) ) {
+				now = "两次密码不一致!";
+			}
+			else if( newPW1.equals(newPW2) ) {
+				Reader reader = new Reader(this.reader.getId(), newPW1);
+				userService.updatePassword(reader);
+				JOptionPane.showMessageDialog(null, "修改成功！", "提示",
+						JOptionPane.PLAIN_MESSAGE, new ImageIcon("image/success.png"));
+				return;
+			}
+		}
+		JOptionPane.showMessageDialog(this, now, 
+				"错误", JOptionPane.ERROR_MESSAGE);
+		changePassWord();
+	}
+	
+
+	private void showAboutInfo() {
+		JOptionPane.showMessageDialog(this, commonService.getAuthorInfo(), 
+				"软件信息", JOptionPane.INFORMATION_MESSAGE, new ImageIcon());
+	}
+	
+	/**
 	 * 对外接口——用户借书动作
 	 * 
 	 * @param index
@@ -387,11 +516,16 @@ public class MainFrame extends JFrame implements ActionListener {
 	public void checkOutBook(int index) {
 
 		// 检测当前用户是否被挂失
+		if(commonService.confirmLossReader(reader.getId()) == 1) {
+			JOptionPane.showMessageDialog(this, "借阅失败，您的账号已被挂失！",
+					"提示", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 
 		// 检测借书数量是否达到上限
 		if (commonService.isReachBookCeiling(reader)) {
 			JOptionPane.showMessageDialog(this, "借阅失败，已达当前会员等级借阅最大数量！请还书后再借阅！",
-					"提示", JOptionPane.YES_OPTION);
+					"提示", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
@@ -513,6 +647,6 @@ public class MainFrame extends JFrame implements ActionListener {
 		adminService.signUpReader(reader);
 		JOptionPane.showMessageDialog(this, "注册成功！该读者的编号为" + reader.getId() 
 				+ "，请保存好自己的ID号！", "系统信息",
-				JOptionPane.YES_OPTION);
+				JOptionPane.YES_OPTION, new ImageIcon("image/success.png"));
 	}
 }

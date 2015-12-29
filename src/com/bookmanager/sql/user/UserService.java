@@ -176,5 +176,19 @@ public class UserService {
 		return true;
 	}
 	
-	
+	/**
+	 * ÓÃ»§ĞŞ¸ÄÃÜÂë
+	 * @param reader
+	 * @return
+	 */
+	public boolean updatePassword(Reader reader) {
+		String sql = mySentence.getUpdatePasswordSQL(reader);
+		try {
+			myStatement.executeUpdate(sql);
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
 }

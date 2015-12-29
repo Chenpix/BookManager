@@ -30,6 +30,11 @@ public class Sentence {
 		return "SELECT * FROM reader WHERE reader_id collate Chinese_PRC_CS_AS='"
 				+ reader.getId() + "'";
 	}
+	
+	public String getReaderSQL(String readerID) {
+		return "SELECT * FROM reader WHERE reader_id collate Chinese_PRC_CS_AS='"
+				+ readerID + "'";
+	}
 
 	public String getBookListSQL(Book book) {
 		StringBuffer sb = new StringBuffer("SELECT * FROM book WHERE ");
@@ -130,7 +135,7 @@ public class Sentence {
 	 * @param maxNumber 该读者最大可借书数量
 	 * @return
 	 */
-	public String getReaderInfo(Reader reader, int maxNumber) {
+	public String getReaderInfo(Reader reader, int maxNumber,boolean loss) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("姓名 ： " + reader.getName() + "\n");
 		sb.append("读者编号 ： " + reader.getId() + "\n");
@@ -148,6 +153,12 @@ public class Sentence {
 		sb.append("注册时间 ： " + reader.getSignUpTime() + "\n");
 		sb.append("当前借书 ： " + reader.getBorrowNumber() + "本\n");
 		sb.append("最多借书 ： " + maxNumber + "本\n");
+		if(loss) {
+			sb.append("账号状态 ： " + "挂失" + "\n");
+		}
+		else {
+			sb.append("账号状态 ： " + "正常" + "\n");
+		}
 		return sb.toString();
 	}
 
@@ -260,4 +271,16 @@ public class Sentence {
 				+ "AND reader.reader_id = borrow.reader_id";
 	}
 	
+	public String getSignLossReaderSQL(String userID) {
+		return "INSERT INTO loss_reporting VALUES('" + userID + "',getdate())";
+	}
+	
+	public String getQueeryLossSQL(String userId) {
+		return "SELECT * FROM loss_reporting WHERE reader_id='" + userId + "'";
+	}
+	
+	public String getUpdatePasswordSQL(Reader reader) {
+		return "UPDATE reader SET password='" + reader.getPassword()
+				+ "' WHERE reader_id='" + reader.getId() + "'";
+	}
 }

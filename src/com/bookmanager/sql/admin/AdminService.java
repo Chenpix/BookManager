@@ -47,7 +47,6 @@ public class AdminService {
 				return true;
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return false;
@@ -75,7 +74,6 @@ public class AdminService {
 			} while (resultSet.next());
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -83,23 +81,51 @@ public class AdminService {
 	}
 
 	public Object[][] formatUserList(List<Reader> readerList) {
-		Object[][] list = new Object[readerList.size()][5];
+		Object[][] list = new Object[readerList.size()][6];
 		int i = 0;
 		for (Reader reader : readerList) {
 			list[i][0] = reader.getId();
 			list[i][1] = reader.getName();
 			list[i][2] = reader.getLevel();
-			list[i++][3] = reader.getMobile();
+			list[i][3] = reader.getMobile();
+			list[i++][4] = confirmLossReader(reader.getId())==1?"挂失":"正常";
 		}
 		return list;
 	}
 
+	/**
+	 * 确认用户是否挂失
+	 * @param userID 
+	 * @return -1 —— 不存在该用户
+	 * 			0 —— 用户存在未挂失
+	 * 			1 —— 用户存在已挂失
+	 */
+	public int confirmLossReader(String userID) {
+		String sql = mySentence.getReaderSQL(userID);
+		try {
+			ResultSet resultSet = myStatement.executeQuery(sql);
+			if( !resultSet.next() ) {
+				return -1;
+			}
+			else {
+				sql = mySentence.getQueeryLossSQL(userID);
+				resultSet = myStatement.executeQuery(sql);
+				if( !resultSet.next() ) {
+					return 0;
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 1;
+	}
+	
 	public String[] getReaderTableHead() {
-		return new String[] { "读者编号", "读者姓名", "会员等级", "联系电话", "详细信息" };
+		return new String[] { "读者编号", "读者姓名", "会员等级", "联系电话", "账号状态", "详细信息" };
 	}
 
 	public int[] getReaderTableWidth() {
-		return new int[] { 80, 50, 50, 100, 50 };
+		return new int[] { 80, 50, 50, 100, 60, 50 };
 	}
 
 	public void showBookDetail(Book book) {
@@ -110,7 +136,6 @@ public class AdminService {
 	}
 
 	private String getCategory(Book book) {
-		// TODO Auto-generated method stub
 		String sql = mySentence.getCategorySQL(book);
 
 		try {
@@ -119,7 +144,6 @@ public class AdminService {
 				return resultSet.getString(1);
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -132,7 +156,6 @@ public class AdminService {
 				return true;
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return false;
@@ -156,7 +179,6 @@ public class AdminService {
 				return resultSet.getString(1);
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -206,7 +228,6 @@ public class AdminService {
 				return combo;
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -224,7 +245,6 @@ public class AdminService {
 				myStatement.executeUpdate(mySentence.getUpdatePhoneSQL(reader));
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -244,7 +264,6 @@ public class AdminService {
 				return false;
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return true;
@@ -268,7 +287,6 @@ public class AdminService {
 			} while (resultSet.next());
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -288,7 +306,6 @@ public class AdminService {
 				return true;
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return false;
@@ -313,7 +330,6 @@ public class AdminService {
 			} while (resultSet.next());
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -370,7 +386,22 @@ public class AdminService {
 			myStatement.executeUpdate(sql);
 			return true;
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	/**
+	 * 根据用户ID挂失用户
+	 * @param userID
+	 * @return
+	 */
+	public boolean signLossReader(String userID) {
+		String sql = mySentence.getSignLossReaderSQL(userID);
+		try {
+			myStatement.executeUpdate(sql);
+			return true;
+		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return false;
@@ -387,9 +418,9 @@ public class AdminService {
 			myStatement.executeUpdate(sql);
 			return true;
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return false;
 	}
+	
 }

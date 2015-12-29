@@ -308,8 +308,6 @@ public class AdminSignUpReaderPanel extends JPanel implements ActionListener{
 				break;
 			}
 			mf.signUpReaderToDB(getCurrentReader());
-			JOptionPane.showMessageDialog(mf, "注册会员成功!", "恭喜",
-					JOptionPane.PLAIN_MESSAGE, new ImageIcon("image/success.png"));
 			resetAllField();
 			break;
 			

@@ -26,7 +26,6 @@ public class CommonService {
 	private static final CommonService myCommonService = new CommonService();
 
 	private CommonService() {
-		// TODO Auto-generated constructor stub
 		this.myStatement = ODBCConnection.getStatement();
 		this.mySentence = Sentence.getSentenceInstance();
 	}
@@ -59,7 +58,6 @@ public class CommonService {
 				}
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return false;
@@ -79,7 +77,6 @@ public class CommonService {
 			reader.setSignUpTime(resultSet.getDate("day"));
 			reader.setBorrowNumber(resultSet.getInt("borrow_number"));
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -106,7 +103,6 @@ public class CommonService {
 				bookList.add(book);
 			} while (resultSet.next());
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -130,7 +126,6 @@ public class CommonService {
 				return null;
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -166,14 +161,19 @@ public class CommonService {
 
 	public void showReaderInfor(Reader reader) {
 		int maxNumber = getReaderMaxNumber(reader);
+		int tmp = confirmLossReader(reader.getId());
+		boolean loss = false;
+		if(tmp == 1) {
+			loss = true;
+		}
 		if(reader.getSex().equals("女")) {
 			JOptionPane.showMessageDialog(null,
-					mySentence.getReaderInfo(reader, maxNumber), "详细资料",
+					mySentence.getReaderInfo(reader, maxNumber,loss), "详细资料",
 					JOptionPane.PLAIN_MESSAGE, new ImageIcon("image/female.png"));
 		}
 		else {
 			JOptionPane.showMessageDialog(null,
-					mySentence.getReaderInfo(reader, maxNumber), "详细资料",
+					mySentence.getReaderInfo(reader, maxNumber,loss), "详细资料",
 					JOptionPane.PLAIN_MESSAGE, new ImageIcon("image/male.png"));
 		}
 		
@@ -206,9 +206,41 @@ public class CommonService {
 				return resultSet.getInt(1);
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return -1;
 	}
+	
+	/**
+	 * 确认用户是否挂失
+	 * @param userID 
+	 * @return -1 —— 不存在该用户
+	 * 			0 —— 用户存在未挂失
+	 * 			1 —— 用户存在已挂失
+	 */
+	public int confirmLossReader(String userID) {
+		String sql = mySentence.getReaderSQL(userID);
+		try {
+			ResultSet resultSet = myStatement.executeQuery(sql);
+			if( !resultSet.next() ) {
+				return -1;
+			}
+			else {
+				sql = mySentence.getQueeryLossSQL(userID);
+				resultSet = myStatement.executeQuery(sql);
+				if( !resultSet.next() ) {
+					return 0;
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 1;
+	}
+
+	public String getAuthorInfo() {
+		
+		return "作者：程昊\n" + "完成时间：2015.12.29\n" + "版本号：1.0\n";
+	}
+	
 }
